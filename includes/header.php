@@ -23,6 +23,15 @@ Auth::requireAuth();
                 <li><a href="/kanban.php">Kanban</a></li>
                 <li><a href="/gantt.php">Gantt</a></li>
                 <li><a href="/reports.php">Reports</a></li>
+                <li class="nav-dropdown">
+                    <a href="#">⚙️ Admin</a>
+                    <ul class="dropdown-menu">
+                        <li><a href="/status.php">Statuses</a></li>
+                        <li><a href="/templates.php">Templates</a></li>
+                        <li><a href="/users.php">Users</a></li>
+                        <li><a href="/backup.php">Backup</a></li>
+                    </ul>
+                </li>
             </ul>
             <div class="nav-user">
                 <span>Welcome, <?php echo htmlspecialchars(Auth::getCurrentUsername()); ?></span>

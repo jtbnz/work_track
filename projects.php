@@ -140,14 +140,17 @@ $showForm = isset($_GET['action']) && $_GET['action'] === 'new' || $editProject;
 
         <div class="form-group">
             <label for="client_id">Client</label>
-            <select id="client_id" name="client_id" class="form-control">
-                <option value="">-- No Client --</option>
-                <?php foreach ($clients as $client): ?>
-                    <option value="<?php echo $client['id']; ?>" <?php echo ($editProject['client_id'] ?? '') == $client['id'] ? 'selected' : ''; ?>>
-                        <?php echo htmlspecialchars($client['name']); ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <select id="client_id" name="client_id" class="form-control" style="flex: 1;">
+                    <option value="">-- No Client --</option>
+                    <?php foreach ($clients as $client): ?>
+                        <option value="<?php echo $client['id']; ?>" <?php echo ($editProject['client_id'] ?? '') == $client['id'] ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($client['name']); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+                <button type="button" onclick="showQuickClientModal()" class="btn btn-secondary">➕ New</button>
+            </div>
         </div>
 
         <div class="form-group">
@@ -211,7 +214,82 @@ document.addEventListener('DOMContentLoaded', function() {
         loadTemplate();
     }
 });
+
+// Quick Client Creation
+function showQuickClientModal() {
+    document.getElementById('quick-client-modal').style.display = 'block';
+}
+
+function hideQuickClientModal() {
+    document.getElementById('quick-client-modal').style.display = 'none';
+    document.getElementById('quick-client-form').reset();
+}
+
+function createQuickClient(event) {
+    event.preventDefault();
+
+    const form = document.getElementById('quick-client-form');
+    const formData = new FormData(form);
+
+    fetch('/api/quick_client.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Add the new client to the dropdown
+            const select = document.getElementById('client_id');
+            const option = document.createElement('option');
+            option.value = data.client_id;
+            option.text = data.client_name;
+            option.selected = true;
+            select.appendChild(option);
+
+            hideQuickClientModal();
+            WorkTrack.showNotification('Client created successfully!', 'success');
+        } else {
+            WorkTrack.showNotification(data.message || 'Failed to create client', 'danger');
+        }
+    })
+    .catch(error => {
+        WorkTrack.showNotification('Error creating client', 'danger');
+    });
+
+    return false;
+}
 </script>
+
+<!-- Quick Client Modal -->
+<div id="quick-client-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">Quick Client Creation</h3>
+            <span class="modal-close" onclick="hideQuickClientModal()">&times;</span>
+        </div>
+        <form id="quick-client-form" onsubmit="return createQuickClient(event)">
+            <div class="form-group">
+                <label for="quick_client_name">Client Name *</label>
+                <input type="text" id="quick_client_name" name="name" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+                <label for="quick_client_email">Email</label>
+                <input type="email" id="quick_client_email" name="email" class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label for="quick_client_phone">Phone</label>
+                <input type="tel" id="quick_client_phone" name="phone" class="form-control">
+            </div>
+
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button type="button" onclick="hideQuickClientModal()" class="btn btn-secondary">Cancel</button>
+                <button type="submit" class="btn btn-primary">Create Client</button>
+            </div>
+        </form>
+    </div>
+</div>
 
 <?php else: ?>
 <!-- Filters -->
