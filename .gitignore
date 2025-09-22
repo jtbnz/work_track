@@ -1,0 +1,63 @@
+# Database files
+database/*.db
+database/*.db-journal
+database/*.db-shm
+database/*.db-wal
+
+# Upload files (except .gitkeep)
+uploads/*
+!uploads/.gitkeep
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Thumbnails
+._*
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+
+# Folder config file
+[Dd]esktop.ini
+
+# PHP
+*.log
+*.cache
+*.tmp
+
+# IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Session files
+sessions/*
+!sessions/.gitkeep
+
+# Temporary files
+*.swp
+*.swo
+*~
+*.bak
+*.backup
+
+# Test coverage
+coverage/
+.phpunit.result.cache
+
+# Node (if added later)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
