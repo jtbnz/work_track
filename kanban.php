@@ -362,6 +362,9 @@ function handleDrop(e) {
 }
 
 function updateProjectStatus(projectId, statusId) {
+    // Store reference to card before async operation (before it gets cleared)
+    const cardToMove = document.querySelector(`.project-card[data-project-id="${projectId}"]`);
+
     fetch('/api/update_project_status.php', {
         method: 'POST',
         headers: {
@@ -376,14 +379,17 @@ function updateProjectStatus(projectId, statusId) {
     .then(data => {
         if (data.success) {
             WorkTrack.showNotification('Project status updated!', 'success');
-            // Move the card to the new column
-            moveCardToColumn(draggedCard, statusId);
+            // Move the card to the new column using stored reference
+            if (cardToMove) {
+                moveCardToColumn(cardToMove, statusId);
+            }
             updateColumnCounts();
         } else {
             WorkTrack.showNotification('Failed to update project status', 'danger');
         }
     })
     .catch(error => {
+        console.error('Error updating project status:', error);
         WorkTrack.showNotification('Error updating project status', 'danger');
     });
 }
