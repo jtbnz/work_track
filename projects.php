@@ -363,7 +363,11 @@ function createQuickClient(event) {
                         <?php endif; ?>
                     </td>
                     <td>
-                        <span class="status-badge" style="background: <?php echo $project['status_color']; ?>; color: white;">
+                        <span class="status-badge clickable-status"
+                              data-project-id="<?php echo $project['id']; ?>"
+                              data-current-status="<?php echo $project['status_id']; ?>"
+                              style="background: <?php echo $project['status_color']; ?>; color: white; cursor: pointer;"
+                              title="Click to change status">
                             <?php echo htmlspecialchars($project['status_name']); ?>
                         </span>
                     </td>
@@ -402,12 +406,197 @@ function createQuickClient(event) {
     <?php endif; ?>
 </div>
 
+<!-- Status Change Modal -->
+<div id="status-modal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 400px;">
+        <div class="modal-header">
+            <h3 class="modal-title">Change Project Status</h3>
+            <span class="modal-close">&times;</span>
+        </div>
+        <div class="modal-body">
+            <p>Select a new status for this project:</p>
+            <div id="status-options">
+                <?php foreach ($statuses as $status): ?>
+                    <label class="status-option">
+                        <input type="radio" name="new_status" value="<?php echo $status['id']; ?>">
+                        <span class="status-label" style="background: <?php echo $status['color']; ?>;">
+                            <?php echo htmlspecialchars($status['name']); ?>
+                        </span>
+                    </label>
+                <?php endforeach; ?>
+            </div>
+            <div style="margin-top: 20px; text-align: right;">
+                <button class="btn btn-secondary" onclick="closeStatusModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="updateProjectStatus()">Update Status</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
 .btn-sm {
     padding: 5px 10px;
     font-size: 13px;
 }
+
+.clickable-status {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.clickable-status:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+}
+
+.modal-header {
+    padding: 20px;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-title {
+    margin: 0;
+    font-size: 20px;
+}
+
+.modal-close {
+    font-size: 28px;
+    cursor: pointer;
+    color: #999;
+}
+
+.modal-close:hover {
+    color: #333;
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+#status-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.status-option {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 5px;
+}
+
+.status-option:hover {
+    background: #f5f5f5;
+}
+
+.status-option input[type="radio"] {
+    margin-right: 10px;
+}
+
+.status-label {
+    padding: 8px 15px;
+    border-radius: 15px;
+    color: white;
+    font-size: 14px;
+    display: inline-block;
+}
 </style>
+
+<script>
+let currentProjectId = null;
+
+// Add click handlers to status badges
+document.addEventListener('DOMContentLoaded', function() {
+    const statusBadges = document.querySelectorAll('.clickable-status');
+    statusBadges.forEach(badge => {
+        badge.addEventListener('click', function() {
+            currentProjectId = this.dataset.projectId;
+            const currentStatus = this.dataset.currentStatus;
+
+            // Pre-select current status
+            const radios = document.querySelectorAll('input[name="new_status"]');
+            radios.forEach(radio => {
+                radio.checked = radio.value === currentStatus;
+            });
+
+            // Show modal
+            document.getElementById('status-modal').style.display = 'flex';
+        });
+    });
+
+    // Close modal handlers
+    document.querySelector('.modal-close').addEventListener('click', closeStatusModal);
+    document.getElementById('status-modal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeStatusModal();
+        }
+    });
+});
+
+function closeStatusModal() {
+    document.getElementById('status-modal').style.display = 'none';
+}
+
+function updateProjectStatus() {
+    const selectedStatus = document.querySelector('input[name="new_status"]:checked');
+    if (!selectedStatus) {
+        alert('Please select a status');
+        return;
+    }
+
+    const statusId = selectedStatus.value;
+
+    // Call API to update status
+    fetch('api/update_project_status.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({
+            project_id: currentProjectId,
+            status_id: statusId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Reload page to show updated status
+            location.reload();
+        } else {
+            alert('Error updating status: ' + (data.message || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        alert('Error updating status: ' + error.message);
+    });
+}
+</script>
+
 <?php endif; ?>
 
 <?php require_once 'includes/footer.php'; ?>
