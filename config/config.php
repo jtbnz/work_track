@@ -2,7 +2,7 @@
 // Configuration settings
 define('DB_PATH', dirname(__DIR__) . '/database/work_track.db');
 define('UPLOAD_PATH', dirname(__DIR__) . '/uploads/');
-define('SITE_NAME', 'Work Track');
+define('SITE_NAME', 'WorkTrack');
 define('SESSION_TIMEOUT', 3600); // 1 hour
 
 // Base URL configuration - automatically detect if in subdirectory

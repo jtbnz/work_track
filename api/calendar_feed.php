@@ -27,11 +27,11 @@ $hostname = $_SERVER['HTTP_HOST'];
 // Start iCal content
 echo "BEGIN:VCALENDAR\r\n";
 echo "VERSION:2.0\r\n";
-echo "PRODID:-//Work Track//Project Calendar//EN\r\n";
+echo "PRODID:-//WorkTrack//Project Calendar//EN\r\n";
 echo "CALSCALE:GREGORIAN\r\n";
 echo "METHOD:PUBLISH\r\n";
-echo "X-WR-CALNAME:Work Track Projects\r\n";
-echo "X-WR-CALDESC:Project deadlines and schedules from Work Track\r\n";
+echo "X-WR-CALNAME:WorkTrack Projects\r\n";
+echo "X-WR-CALDESC:Project deadlines and schedules from WorkTrack\r\n";
 echo "X-WR-TIMEZONE:" . date_default_timezone_get() . "\r\n";
 echo "REFRESH-INTERVAL;VALUE=DURATION:PT1H\r\n"; // Refresh every hour
 

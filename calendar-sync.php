@@ -68,7 +68,7 @@ $username = Auth::getCurrentUsername();
                 <li>
                     <strong>Configure Settings</strong>
                     <ul>
-                        <li><strong>Description:</strong> Work Track Calendar</li>
+                        <li><strong>Description:</strong> WorkTrack Calendar</li>
                         <li><strong>Location:</strong> Leave as default</li>
                         <li><strong>Remove Alarms:</strong> Toggle OFF (to keep project reminders)</li>
                         <li><strong>Update Frequency:</strong> Every Hour (or as preferred)</li>
@@ -127,7 +127,7 @@ $username = Auth::getCurrentUsername();
                 <li>
                     <strong>Configure Settings</strong>
                     <ul>
-                        <li><strong>Name:</strong> Work Track</li>
+                        <li><strong>Name:</strong> WorkTrack</li>
                         <li><strong>Color:</strong> Choose your preference</li>
                         <li><strong>Location:</strong> iCloud or On My Mac</li>
                         <li><strong>Auto-refresh:</strong> Every hour</li>
@@ -201,7 +201,7 @@ $username = Auth::getCurrentUsername();
 
         <h3>Important Notes</h3>
         <div class="notes-section">
-            <p>📌 <strong>Read-Only:</strong> This is a subscribed calendar. You cannot edit events from your phone - changes must be made in Work Track.</p>
+            <p>📌 <strong>Read-Only:</strong> This is a subscribed calendar. You cannot edit events from your phone - changes must be made in WorkTrack.</p>
             <p>🔄 <strong>Sync Frequency:</strong> By default, iOS checks for updates every hour. You can change this in Settings → Calendar → Accounts → Fetch New Data.</p>
             <p>🎨 <strong>Calendar Color:</strong> After adding, you can change the calendar color in the Calendar app by tapping "Calendars" at the bottom.</p>
             <p>🔐 <strong>Security:</strong> <?php echo $protocol === 'https://' ? 'Your connection is secure (HTTPS)' : '⚠️ Your connection is not encrypted. Consider using HTTPS for better security.'; ?></p>

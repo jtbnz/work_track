@@ -153,7 +153,7 @@ function getDatabaseStats($db) {
 }
 
 function generateSQLDump($db) {
-    $sql = "-- Work Track Database Backup\n";
+    $sql = "-- WorkTrack Database Backup\n";
     $sql .= "-- Generated: " . date('Y-m-d H:i:s') . "\n\n";
 
     // Get schema
@@ -186,7 +186,7 @@ function generateSQLDump($db) {
 }
 
 function generateDataOnlyDump($db) {
-    $sql = "-- Work Track Data-Only Backup\n";
+    $sql = "-- WorkTrack Data-Only Backup\n";
     $sql .= "-- Generated: " . date('Y-m-d H:i:s') . "\n\n";
 
     $tableNames = $db->fetchAll("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'");

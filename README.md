@@ -1,4 +1,4 @@
-# Work Track - Project Management System
+# WorkTrack - Project Management System
 
 A comprehensive web-based project tracking and management application designed for businesses to efficiently manage clients, projects, and workflows.
 
