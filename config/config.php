@@ -4,6 +4,11 @@ define('DB_PATH', dirname(__DIR__) . '/database/work_track.db');
 define('UPLOAD_PATH', dirname(__DIR__) . '/uploads/');
 define('SITE_NAME', 'Work Track');
 define('SESSION_TIMEOUT', 3600); // 1 hour
+
+// Base URL configuration - automatically detect if in subdirectory
+$scriptPath = dirname($_SERVER['SCRIPT_NAME']);
+$basePath = ($scriptPath === '/' || $scriptPath === '\\') ? '' : $scriptPath;
+define('BASE_PATH', $basePath);
 define('MAX_UPLOAD_SIZE', 10485760); // 10MB
 define('ALLOWED_FILE_TYPES', ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'png', 'jpg', 'jpeg', 'gif', 'txt']);
 

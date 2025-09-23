@@ -8,34 +8,34 @@ Auth::requireAuth();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $pageTitle ?? ''; ?> - <?php echo SITE_NAME; ?></title>
-    <link rel="stylesheet" href="/public/css/style.css">
-    <script src="/public/js/main.js"></script>
+    <link rel="stylesheet" href="<?php echo BASE_PATH; ?>/public/css/style.css">
+    <script src="<?php echo BASE_PATH; ?>/public/js/main.js"></script>
 </head>
 <body>
     <nav class="navbar">
         <div class="nav-container">
-            <a href="/index.php" class="nav-brand"><?php echo SITE_NAME; ?></a>
+            <a href="<?php echo BASE_PATH; ?>/index.php" class="nav-brand"><?php echo SITE_NAME; ?></a>
             <ul class="nav-menu">
-                <li><a href="/index.php">Dashboard</a></li>
-                <li><a href="/projects.php">Projects</a></li>
-                <li><a href="/clients.php">Clients</a></li>
-                <li><a href="/calendar.php">Calendar</a></li>
-                <li><a href="/kanban.php">Kanban</a></li>
-                <li><a href="/gantt.php">Gantt</a></li>
-                <li><a href="/reports.php">Reports</a></li>
+                <li><a href="<?php echo BASE_PATH; ?>/index.php">Dashboard</a></li>
+                <li><a href="<?php echo BASE_PATH; ?>/projects.php">Projects</a></li>
+                <li><a href="<?php echo BASE_PATH; ?>/clients.php">Clients</a></li>
+                <li><a href="<?php echo BASE_PATH; ?>/calendar.php">Calendar</a></li>
+                <li><a href="<?php echo BASE_PATH; ?>/kanban.php">Kanban</a></li>
+                <li><a href="<?php echo BASE_PATH; ?>/gantt.php">Gantt</a></li>
+                <li><a href="<?php echo BASE_PATH; ?>/reports.php">Reports</a></li>
                 <li class="nav-dropdown">
                     <a href="#">⚙️ Admin</a>
                     <ul class="dropdown-menu">
-                        <li><a href="/status.php">Statuses</a></li>
-                        <li><a href="/templates.php">Templates</a></li>
-                        <li><a href="/users.php">Users</a></li>
-                        <li><a href="/backup.php">Backup</a></li>
+                        <li><a href="<?php echo BASE_PATH; ?>/status.php">Statuses</a></li>
+                        <li><a href="<?php echo BASE_PATH; ?>/templates.php">Templates</a></li>
+                        <li><a href="<?php echo BASE_PATH; ?>/users.php">Users</a></li>
+                        <li><a href="<?php echo BASE_PATH; ?>/backup.php">Backup</a></li>
                     </ul>
                 </li>
             </ul>
             <div class="nav-user">
                 <span>Welcome, <?php echo htmlspecialchars(Auth::getCurrentUsername()); ?></span>
-                <a href="/logout.php" class="btn-logout">Logout</a>
+                <a href="<?php echo BASE_PATH; ?>/logout.php" class="btn-logout">Logout</a>
             </div>
         </div>
     </nav>

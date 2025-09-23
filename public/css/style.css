@@ -80,21 +80,22 @@ body {
     position: relative;
 }
 
-.nav-dropdown:hover .dropdown-menu {
+.nav-dropdown:hover .dropdown-menu,
+.dropdown-menu:hover {
     display: block;
 }
 
 .dropdown-menu {
     display: none;
     position: absolute;
-    top: 100%;
+    top: calc(100% - 5px);
     left: 0;
     background: white;
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     border-radius: 5px;
     min-width: 150px;
     z-index: 1000;
-    margin-top: 5px;
+    padding-top: 10px;
 }
 
 .dropdown-menu li {

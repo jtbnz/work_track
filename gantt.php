@@ -22,23 +22,30 @@ $statuses = $statusModel->getAll();
 // Get view mode (default to month)
 $viewMode = $_GET['view'] ?? 'month';
 
-// Calculate date range
+// Get selected date or default to today
+$selectedDate = $_GET['date'] ?? date('Y-m-d');
 $currentDate = date('Y-m-d');
-$startDate = $_GET['start'] ?? date('Y-m-01');
 
+// Calculate date range based on selected date and view mode
 switch ($viewMode) {
     case 'week':
-        $endDate = date('Y-m-d', strtotime($startDate . ' +7 days'));
+        // Start from Monday of the selected week
+        $dayOfWeek = date('w', strtotime($selectedDate));
+        $daysToMonday = ($dayOfWeek == 0) ? -6 : (1 - $dayOfWeek);
+        $startDate = date('Y-m-d', strtotime($selectedDate . " $daysToMonday days"));
+        $endDate = date('Y-m-d', strtotime($startDate . ' +6 days'));
         $prevStart = date('Y-m-d', strtotime($startDate . ' -7 days'));
         $nextStart = date('Y-m-d', strtotime($startDate . ' +7 days'));
         break;
     case 'day':
-        $endDate = $startDate;
+        $startDate = $selectedDate;
+        $endDate = $selectedDate;
         $prevStart = date('Y-m-d', strtotime($startDate . ' -1 day'));
         $nextStart = date('Y-m-d', strtotime($startDate . ' +1 day'));
         break;
     default: // month
-        $endDate = date('Y-m-t', strtotime($startDate));
+        $startDate = date('Y-m-01', strtotime($selectedDate));
+        $endDate = date('Y-m-t', strtotime($selectedDate));
         $prevStart = date('Y-m-01', strtotime($startDate . ' -1 month'));
         $nextStart = date('Y-m-01', strtotime($startDate . ' +1 month'));
         break;
@@ -68,11 +75,17 @@ $totalDays = ($endTime - $startTime) / 86400 + 1;
 <div class="page-header">
     <h1 class="page-title">Gantt Chart</h1>
     <div class="page-actions">
-        <a href="?view=<?php echo $viewMode; ?>&start=<?php echo $prevStart; ?>" class="btn btn-secondary">← Previous</a>
-        <a href="?view=day" class="btn btn-secondary <?php echo $viewMode == 'day' ? 'active' : ''; ?>">Day</a>
-        <a href="?view=week" class="btn btn-secondary <?php echo $viewMode == 'week' ? 'active' : ''; ?>">Week</a>
-        <a href="?view=month" class="btn btn-secondary <?php echo $viewMode == 'month' ? 'active' : ''; ?>">Month</a>
-        <a href="?view=<?php echo $viewMode; ?>&start=<?php echo $nextStart; ?>" class="btn btn-secondary">Next →</a>
+        <a href="?view=<?php echo $viewMode; ?>&date=<?php echo $prevStart; ?>" class="btn btn-secondary">← Previous</a>
+
+        <input type="date" id="datePicker" value="<?php echo $selectedDate; ?>" class="form-control" style="width: auto;">
+
+        <a href="?view=day&date=<?php echo $selectedDate; ?>" class="btn btn-secondary <?php echo $viewMode == 'day' ? 'active' : ''; ?>">Day</a>
+        <a href="?view=week&date=<?php echo $selectedDate; ?>" class="btn btn-secondary <?php echo $viewMode == 'week' ? 'active' : ''; ?>">Week</a>
+        <a href="?view=month&date=<?php echo $selectedDate; ?>" class="btn btn-secondary <?php echo $viewMode == 'month' ? 'active' : ''; ?>">Month</a>
+
+        <a href="?view=<?php echo $viewMode; ?>&date=<?php echo $nextStart; ?>" class="btn btn-secondary">Next →</a>
+
+        <a href="?view=<?php echo $viewMode; ?>&date=<?php echo $currentDate; ?>" class="btn btn-primary">Today</a>
     </div>
 </div>
 
@@ -80,7 +93,7 @@ $totalDays = ($endTime - $startTime) / 86400 + 1;
 <div class="form-container" style="margin-bottom: 20px;">
     <form method="GET" style="display: flex; gap: 15px; flex-wrap: wrap; align-items: end;">
         <input type="hidden" name="view" value="<?php echo $viewMode; ?>">
-        <input type="hidden" name="start" value="<?php echo $startDate; ?>">
+        <input type="hidden" name="date" value="<?php echo $selectedDate; ?>">
 
         <div class="form-group" style="margin-bottom: 0;">
             <label for="client">Client</label>
@@ -118,17 +131,31 @@ $totalDays = ($endTime - $startTime) / 86400 + 1;
         <div class="gantt-header">
             <div class="gantt-row-header">Project</div>
             <div class="gantt-timeline">
+                <?php if ($viewMode == 'month'): ?>
+                    <!-- Month label row -->
+                    <div class="month-label-row">
+                        <div class="month-label" style="width: 100%; text-align: center; font-weight: bold; padding: 5px;">
+                            <?php echo date('F Y', strtotime($startDate)); ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
                 <?php
+                $prevMonth = '';
                 for ($i = 0; $i < $totalDays; $i++) {
                     $date = date('Y-m-d', strtotime($startDate . " +$i days"));
                     $isToday = $date == $currentDate;
                     $isWeekend = in_array(date('w', strtotime($date)), [0, 6]);
+                    $currentMonth = date('M', strtotime($date));
                 ?>
                     <div class="gantt-day <?php echo $isToday ? 'today' : ''; ?> <?php echo $isWeekend ? 'weekend' : ''; ?>">
-                        <?php if ($viewMode == 'month' && $totalDays > 20): ?>
-                            <?php echo date('j', strtotime($date)); ?>
-                        <?php else: ?>
-                            <?php echo date('M j', strtotime($date)); ?>
+                        <?php if ($viewMode == 'month'): ?>
+                            <div class="day-number"><?php echo date('j', strtotime($date)); ?></div>
+                            <div class="day-name"><?php echo date('D', strtotime($date)); ?></div>
+                        <?php elseif ($viewMode == 'week'): ?>
+                            <div><?php echo date('D', strtotime($date)); ?></div>
+                            <div style="font-weight: bold;"><?php echo date('M j', strtotime($date)); ?></div>
+                        <?php else: // day view ?>
+                            <div><?php echo date('D, M j', strtotime($date)); ?></div>
                         <?php endif; ?>
                     </div>
                 <?php } ?>
@@ -187,6 +214,18 @@ $totalDays = ($endTime - $startTime) / 86400 + 1;
     </div>
 </div>
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const datePicker = document.getElementById('datePicker');
+    if (datePicker) {
+        datePicker.addEventListener('change', function() {
+            const currentView = '<?php echo $viewMode; ?>';
+            window.location.href = '?view=' + currentView + '&date=' + this.value;
+        });
+    }
+});
+</script>
+
 <style>
 .gantt-container {
     background: white;
@@ -205,6 +244,8 @@ $totalDays = ($endTime - $startTime) / 86400 + 1;
     background: #f8f9fa;
     border-bottom: 2px solid #dee2e6;
     font-weight: 600;
+    position: relative;
+    margin-top: 35px;
 }
 
 .gantt-row {
@@ -232,14 +273,41 @@ $totalDays = ($endTime - $startTime) / 86400 + 1;
 
 .gantt-header .gantt-timeline {
     display: flex;
+    flex-wrap: wrap;
+    position: relative;
+}
+
+.month-label-row {
+    position: absolute;
+    top: -30px;
+    left: 0;
+    right: 0;
+    background: #667eea;
+    color: white;
+    border-radius: 5px 5px 0 0;
+    height: 30px;
+    display: flex;
+    align-items: center;
 }
 
 .gantt-day {
     flex: 1;
     text-align: center;
-    padding: 10px 2px;
+    padding: 5px 2px;
     border-right: 1px solid #eee;
-    font-size: 12px;
+    font-size: 11px;
+    min-width: 30px;
+}
+
+.gantt-day .day-number {
+    font-weight: bold;
+    font-size: 13px;
+}
+
+.gantt-day .day-name {
+    font-size: 10px;
+    color: #666;
+    margin-top: 2px;
 }
 
 .gantt-day.today {

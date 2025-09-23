@@ -59,32 +59,32 @@ $upcomingDeadlines = $db->fetchAll("
 <!-- Navigation Cards -->
 <h2 style="margin: 30px 0 20px 0;">Quick Access</h2>
 <div class="dashboard-grid">
-    <a href="/projects.php" class="dashboard-card">
+    <a href="<?php echo BASE_PATH; ?>/projects.php" class="dashboard-card">
         <div class="card-icon" style="background: #e3f2fd; color: #1976d2;">📋</div>
         <div class="card-title">Projects</div>
         <div class="card-description">Manage all your projects</div>
     </a>
-    <a href="/clients.php" class="dashboard-card">
+    <a href="<?php echo BASE_PATH; ?>/clients.php" class="dashboard-card">
         <div class="card-icon" style="background: #f3e5f5; color: #7b1fa2;">👥</div>
         <div class="card-title">Clients</div>
         <div class="card-description">View and manage clients</div>
     </a>
-    <a href="/calendar.php" class="dashboard-card">
+    <a href="<?php echo BASE_PATH; ?>/calendar.php" class="dashboard-card">
         <div class="card-icon" style="background: #e8f5e9; color: #388e3c;">📅</div>
         <div class="card-title">Calendar</div>
         <div class="card-description">Monthly project view</div>
     </a>
-    <a href="/kanban.php" class="dashboard-card">
+    <a href="<?php echo BASE_PATH; ?>/kanban.php" class="dashboard-card">
         <div class="card-icon" style="background: #fff3e0; color: #f57c00;">📊</div>
         <div class="card-title">Kanban Board</div>
         <div class="card-description">Drag & drop project status</div>
     </a>
-    <a href="/gantt.php" class="dashboard-card">
+    <a href="<?php echo BASE_PATH; ?>/gantt.php" class="dashboard-card">
         <div class="card-icon" style="background: #fce4ec; color: #c2185b;">📈</div>
         <div class="card-title">Gantt Chart</div>
         <div class="card-description">Timeline visualization</div>
     </a>
-    <a href="/reports.php" class="dashboard-card">
+    <a href="<?php echo BASE_PATH; ?>/reports.php" class="dashboard-card">
         <div class="card-icon" style="background: #e0f2f1; color: #00796b;">📊</div>
         <div class="card-title">Reports</div>
         <div class="card-description">Project analytics & export</div>
@@ -93,8 +93,8 @@ $upcomingDeadlines = $db->fetchAll("
 
 <!-- Quick Actions -->
 <div style="display: flex; gap: 15px; margin: 30px 0;">
-    <a href="/projects.php?action=new" class="btn btn-primary">➕ New Project</a>
-    <a href="/clients.php?action=new" class="btn btn-success">➕ New Client</a>
+    <a href="<?php echo BASE_PATH; ?>/projects.php?action=new" class="btn btn-primary">➕ New Project</a>
+    <a href="<?php echo BASE_PATH; ?>/clients.php?action=new" class="btn btn-success">➕ New Client</a>
 </div>
 
 <!-- Upcoming Deadlines -->
@@ -117,7 +117,7 @@ $upcomingDeadlines = $db->fetchAll("
                     $daysRemaining = ceil($daysRemaining);
                 ?>
                     <tr>
-                        <td><a href="/projects.php?id=<?php echo $project['id']; ?>" style="color: #667eea; text-decoration: none;"><?php echo htmlspecialchars($project['title']); ?></a></td>
+                        <td><a href="<?php echo BASE_PATH; ?>/projects.php?id=<?php echo $project['id']; ?>" style="color: #667eea; text-decoration: none;"><?php echo htmlspecialchars($project['title']); ?></a></td>
                         <td><?php echo htmlspecialchars($project['client_name'] ?? 'No client'); ?></td>
                         <td><span class="status-badge" style="background: <?php echo $project['status_color']; ?>; color: white;"><?php echo htmlspecialchars($project['status_name']); ?></span></td>
                         <td><?php echo date('M j, Y', strtotime($project['completion_date'])); ?></td>

@@ -65,7 +65,7 @@ class Auth {
 
     public static function requireAuth() {
         if (!self::isLoggedIn()) {
-            header('Location: /login.php');
+            header('Location: ' . BASE_PATH . '/login.php');
             exit;
         }
     }
