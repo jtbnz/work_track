@@ -29,6 +29,7 @@ Auth::requireAuth();
                         <li><a href="<?php echo BASE_PATH; ?>/status.php">Statuses</a></li>
                         <li><a href="<?php echo BASE_PATH; ?>/templates.php">Templates</a></li>
                         <li><a href="<?php echo BASE_PATH; ?>/users.php">Users</a></li>
+                        <li><a href="<?php echo BASE_PATH; ?>/calendar-sync.php">📅 Calendar Sync</a></li>
                         <li><a href="<?php echo BASE_PATH; ?>/backup.php">Backup</a></li>
                     </ul>
                 </li>

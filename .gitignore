@@ -52,6 +52,23 @@ sessions/*
 *.bak
 *.backup
 
+# Backup files and directories
+backups/
+downloads/
+*.sql.gz
+*.sql.bak
+*.db.bak
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.dump
+database_backup_*
+db_backup_*
+work_track_backup_*
+# Keep schema.sql as it's needed for setup
+!database/schema.sql
+
 # Test coverage
 coverage/
 .phpunit.result.cache
