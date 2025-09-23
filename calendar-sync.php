@@ -8,7 +8,7 @@ $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' 
 $hostname = $_SERVER['HTTP_HOST'];
 $basePath = BASE_PATH;
 $fullUrl = $protocol . $hostname . $basePath;
-$icalUrl = $fullUrl . '/api/calendar.ics';
+$icalUrl = $fullUrl . '/api/calendar_feed.php';
 
 // Get current user info for personalized URL
 $userId = Auth::getCurrentUserId();
@@ -93,7 +93,7 @@ $username = Auth::getCurrentUsername();
                 <li>
                     <strong>Paste and Modify URL</strong>
                     <p>In the address bar, type: <code>webcal://</code> then paste the rest of the URL after http://</p>
-                    <p>Example: <code>webcal://<?php echo $hostname . $basePath; ?>/api/calendar.ics</code></p>
+                    <p>Example: <code>webcal://<?php echo $hostname . $basePath; ?>/api/calendar_feed.php</code></p>
                 </li>
                 <li>
                     <strong>Subscribe</strong>

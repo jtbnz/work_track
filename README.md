@@ -190,7 +190,7 @@ work_track/
 │   ├── update_project.php
 │   ├── update_project_date.php
 │   ├── update_project_status.php
-│   ├── calendar.ics     # iCal feed endpoint
+│   ├── calendar_feed.php # iCal feed endpoint
 │   ├── upload_file.php
 │   ├── download_file.php
 │   └── delete_file.php

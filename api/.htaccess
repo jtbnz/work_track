@@ -1,0 +1,13 @@
+# Enable PHP execution in this directory
+<FilesMatch "\.php$">
+    SetHandler application/x-httpd-php
+</FilesMatch>
+
+# Set proper content type for calendar feed
+<Files "calendar_feed.php">
+    ForceType application/x-httpd-php
+</Files>
+
+# Allow access to API files
+Order Allow,Deny
+Allow from all
