@@ -2,6 +2,8 @@
 
 A comprehensive web-based project tracking and management application designed for businesses to efficiently manage clients, projects, and workflows.
 
+**Repository**: [https://github.com/jtbnz/work_track](https://github.com/jtbnz/work_track)
+
 ## 🌟 Features
 
 ### ✅ Implemented Features
@@ -54,6 +56,38 @@ A comprehensive web-based project tracking and management application designed f
   - Visual project cards with details
   - Real-time status changes
 
+- **📊 Gantt Chart**
+  - Timeline visualization with day/week/month views
+  - Date picker for navigation
+  - Project duration bars with color coding
+  - Filter by client and status
+  - Today button for quick navigation
+
+- **📊 Reports & Analytics**
+  - Project filtering and search
+  - Export to CSV functionality
+  - Status and client filtering
+  - Date range selection
+
+- **👤 User Management**
+  - Create and manage admin users
+  - Password reset functionality
+  - Last login tracking
+  - User activity monitoring
+
+- **💾 Backup System**
+  - Database backup and download
+  - One-click restore functionality
+  - Automatic backup file generation
+  - Secure backup storage
+
+- **📱 Calendar Integration**
+  - iCal/ICS feed for external calendars
+  - iOS/iPhone subscription support
+  - Google Calendar and Outlook compatibility
+  - Automatic sync with project updates
+  - Step-by-step setup instructions in admin area
+
 ### 🔧 Technical Features
 
 - **Database Management**
@@ -86,7 +120,7 @@ A comprehensive web-based project tracking and management application designed f
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/jtbnz/work_track.git
    cd work_track
    ```
 
@@ -105,6 +139,26 @@ A comprehensive web-based project tracking and management application designed f
    - Login with default credentials:
      - **Username**: `admin`
      - **Password**: `admin`
+
+### Deployment to Production
+
+#### Subdirectory Installation
+If deploying to a subdirectory (e.g., `example.com/work_track/`):
+
+1. Upload all files to your subdirectory
+2. Ensure the web server user has write permissions for:
+   - `database/` directory
+   - `uploads/` directory
+   - `backups/` directory (if it exists)
+3. The application automatically detects subdirectory installation
+4. All URLs will be relative to the subdirectory
+
+#### Root Installation
+For root domain installation (e.g., `example.com`):
+
+1. Upload all files to your document root
+2. Follow the same permission settings as above
+3. Configure your web server to point to the application root
 
 ## 🏗️ Project Structure
 
@@ -135,7 +189,11 @@ work_track/
 │   ├── get_project.php
 │   ├── update_project.php
 │   ├── update_project_date.php
-│   └── update_project_status.php
+│   ├── update_project_status.php
+│   ├── calendar.ics     # iCal feed endpoint
+│   ├── upload_file.php
+│   ├── download_file.php
+│   └── delete_file.php
 ├── uploads/             # File uploads directory
 ├── views/               # View templates (future use)
 ├── index.php            # Dashboard
@@ -147,6 +205,11 @@ work_track/
 ├── templates.php        # Template management
 ├── calendar.php         # Calendar view
 ├── kanban.php           # Kanban board
+├── gantt.php            # Gantt chart view
+├── reports.php          # Reports and analytics
+├── users.php            # User management
+├── backup.php           # Backup management
+├── calendar-sync.php    # Calendar sync instructions
 └── .htaccess            # URL routing and security
 ```
 
@@ -221,13 +284,14 @@ work_track/
 
 ## 🚧 Future Enhancements
 
-### Planned Features (Ready to Implement)
-- **Gantt Chart View**: Timeline visualization with dependencies
-- **Reports & Analytics**: Export capabilities and data analysis
-- **File Attachments**: Document management for projects
-- **iCal Integration**: Calendar export for external applications
-- **Database Export**: Backup and restore functionality
-- **User Management**: Interface for creating additional admin users
+### Recently Implemented Features
+- **📊 Gantt Chart View**: Timeline visualization with day/week/month views and date picker
+- **📈 Reports & Analytics**: Project reporting with export capabilities
+- **📎 File Attachments**: Document upload and management for projects
+- **📱 iCal Integration**: Calendar subscription for iOS/Android/Outlook with sync instructions
+- **💾 Database Backup**: Backup and restore functionality with download options
+- **👤 User Management**: Interface for creating and managing admin users
+- **🔗 Subdirectory Support**: Works in both root and subdirectory installations
 
 ### Technical Improvements
 - **API Documentation**: REST API with proper documentation
@@ -246,7 +310,7 @@ A comprehensive testing plan is available in `TESTING_PLAN.md` covering:
 
 ## 🤝 Contributing
 
-1. Fork the repository
+1. Fork the repository from [https://github.com/jtbnz/work_track](https://github.com/jtbnz/work_track)
 2. Create a feature branch (`git checkout -b feature/new-feature`)
 3. Commit your changes (`git commit -am 'Add new feature'`)
 4. Push to the branch (`git push origin feature/new-feature`)
@@ -261,7 +325,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 For support, issues, or feature requests:
 1. Check the `TESTING_PLAN.md` for common issues
 2. Review the codebase documentation in `CLAUDE.md`
-3. Create an issue in the repository
+3. Create an issue at [https://github.com/jtbnz/work_track/issues](https://github.com/jtbnz/work_track/issues)
 
 ## 🎯 Use Cases
 
