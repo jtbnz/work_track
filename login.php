@@ -27,6 +27,8 @@ if (Auth::isLoggedIn()) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - <?php echo SITE_NAME; ?></title>
+    <link rel="icon" type="image/svg+xml" href="public/images/favicon.svg">
+    <link rel="shortcut icon" href="favicon.ico">
     <link rel="stylesheet" href="public/css/style.css">
     <style>
         body {

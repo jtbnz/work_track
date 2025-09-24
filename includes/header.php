@@ -8,6 +8,8 @@ Auth::requireAuth();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $pageTitle ?? ''; ?> - <?php echo SITE_NAME; ?></title>
+    <link rel="icon" type="image/svg+xml" href="<?php echo BASE_PATH; ?>/public/images/favicon.svg">
+    <link rel="shortcut icon" href="<?php echo BASE_PATH; ?>/favicon.ico">
     <link rel="stylesheet" href="<?php echo BASE_PATH; ?>/public/css/style.css">
     <script src="<?php echo BASE_PATH; ?>/public/js/main.js"></script>
 </head>
