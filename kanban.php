@@ -461,7 +461,7 @@ function saveProject(event, projectId) {
     event.preventDefault();
     const formData = new FormData(event.target);
 
-    fetch('/api/update_project.php', {
+    fetch('api/update_project.php', {
         method: 'POST',
         body: formData,
         headers: {

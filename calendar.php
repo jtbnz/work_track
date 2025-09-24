@@ -321,7 +321,7 @@ function handleProjectClick(e) {
 }
 
 function updateProjectDate(projectId, newDate) {
-    fetch('/api/update_project_date.php', {
+    fetch('api/update_project_date.php', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -394,7 +394,7 @@ function saveProject(event, projectId) {
     event.preventDefault();
     const formData = new FormData(event.target);
 
-    fetch('/api/update_project.php', {
+    fetch('api/update_project.php', {
         method: 'POST',
         body: formData,
         headers: {

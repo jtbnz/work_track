@@ -112,7 +112,7 @@ document.getElementById('upload-form').addEventListener('submit', function(e) {
         return;
     }
 
-    fetch('/api/upload_file.php', {
+    fetch('api/upload_file.php', {
         method: 'POST',
         body: formData
     })
@@ -135,7 +135,7 @@ function deleteAttachment(attachmentId) {
         return;
     }
 
-    fetch('/api/delete_file.php', {
+    fetch('api/delete_file.php', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

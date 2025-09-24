@@ -231,7 +231,7 @@ function createQuickClient(event) {
     const form = document.getElementById('quick-client-form');
     const formData = new FormData(form);
 
-    fetch('/api/quick_client.php', {
+    fetch('api/quick_client.php', {
         method: 'POST',
         body: formData
     })
