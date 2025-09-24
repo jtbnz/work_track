@@ -231,7 +231,7 @@ function createQuickClient(event) {
     const form = document.getElementById('quick-client-form');
     const formData = new FormData(form);
 
-    fetch('api/quick_client.php', {
+    fetch('/work_track/api/quick_client.php', {
         method: 'POST',
         body: formData
     })
@@ -571,7 +571,7 @@ function updateProjectStatus() {
     const statusId = selectedStatus.value;
 
     // Call API to update status
-    fetch('api/update_project_status.php', {
+    fetch('/work_track/api/update_project_status.php', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

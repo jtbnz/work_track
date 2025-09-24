@@ -365,7 +365,7 @@ function updateProjectStatus(projectId, statusId) {
     // Store reference to card before async operation (before it gets cleared)
     const cardToMove = document.querySelector(`.project-card[data-project-id="${projectId}"]`);
 
-    fetch('api/update_project_status.php?v=' + Date.now(), {
+    fetch('/work_track/api/update_project_status.php?v=' + Date.now(), {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -473,7 +473,7 @@ function saveProject(event, projectId) {
     event.preventDefault();
     const formData = new FormData(event.target);
 
-    fetch('api/update_project.php', {
+    fetch('/work_track/api/update_project.php', {
         method: 'POST',
         body: formData,
         headers: {
