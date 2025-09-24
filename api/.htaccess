@@ -3,11 +3,17 @@
     SetHandler application/x-httpd-php
 </FilesMatch>
 
+# Alternative PHP handler (try if above doesn't work)
+# AddHandler php8-script .php
+
 # Set proper content type for calendar feed
 <Files "calendar_feed.php">
     ForceType application/x-httpd-php
 </Files>
 
-# Allow access to API files
+# Allow access to API files (Apache 2.4 syntax)
+Require all granted
+
+# Legacy Apache 2.2 syntax (fallback)
 Order Allow,Deny
 Allow from all
