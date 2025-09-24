@@ -2,16 +2,25 @@
 require_once dirname(__DIR__) . '/includes/db.php';
 
 function initializeDatabase() {
+    $dbPath = dirname(__DIR__) . '/database/work_track.db';
+    $isNewDatabase = !file_exists($dbPath);
+
     $db = Database::getInstance();
     $conn = $db->getConnection();
 
-    try {
-        // Read and execute schema
-        $schema = file_get_contents(__DIR__ . '/schema.sql');
-        $conn->exec($schema);
-        echo "Database schema created/updated successfully.\n";
-    } catch (PDOException $e) {
-        echo "Warning: Schema already exists or partially exists.\n";
+    // Only create schema if database is new
+    if ($isNewDatabase) {
+        try {
+            // Read and execute schema
+            $schema = file_get_contents(__DIR__ . '/schema.sql');
+            $conn->exec($schema);
+            echo "Database created and schema initialized successfully.\n";
+        } catch (PDOException $e) {
+            echo "Error creating database schema: " . $e->getMessage() . "\n";
+            return;
+        }
+    } else {
+        echo "Database already exists - checking for updates.\n";
     }
 
     // Check if admin user already exists
