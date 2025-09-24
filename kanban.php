@@ -365,7 +365,7 @@ function updateProjectStatus(projectId, statusId) {
     // Store reference to card before async operation (before it gets cleared)
     const cardToMove = document.querySelector(`.project-card[data-project-id="${projectId}"]`);
 
-    fetch('api/update_project_status.php', {
+    fetch('api/update_project_status.php?v=' + Date.now(), {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -375,17 +375,29 @@ function updateProjectStatus(projectId, statusId) {
             status_id: statusId
         })
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            WorkTrack.showNotification('Project status updated!', 'success');
-            // Move the card to the new column using stored reference
-            if (cardToMove) {
-                moveCardToColumn(cardToMove, statusId);
+    .then(response => {
+        if (!response.ok) {
+            console.error('HTTP Error:', response.status, response.statusText);
+        }
+        return response.text();
+    })
+    .then(text => {
+        console.log('API Response:', text);
+        try {
+            const data = JSON.parse(text);
+            if (data.success) {
+                WorkTrack.showNotification('Project status updated!', 'success');
+                // Move the card to the new column using stored reference
+                if (cardToMove) {
+                    moveCardToColumn(cardToMove, statusId);
+                }
+                updateColumnCounts();
+            } else {
+                WorkTrack.showNotification(data.message || 'Failed to update project status', 'danger');
             }
-            updateColumnCounts();
-        } else {
-            WorkTrack.showNotification('Failed to update project status', 'danger');
+        } catch (e) {
+            console.error('Invalid JSON response:', text);
+            WorkTrack.showNotification('Server error - check console', 'danger');
         }
     })
     .catch(error => {
