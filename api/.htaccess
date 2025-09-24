@@ -1,19 +1,7 @@
-# Enable PHP execution in this directory for ea-php81
-<FilesMatch "\.php$">
-    SetHandler application/x-httpd-ea-php81
-</FilesMatch>
+# Enable PHP execution for ea-php81
+AddHandler ea-php81 .php
 
-# Alternative handlers if above doesn't work
-# AddHandler ea-php81 .php
-
-# Set proper content type for calendar feed
-<Files "calendar_feed.php">
-    ForceType application/x-httpd-ea-php81
-</Files>
-
-# Allow access to API files (Apache 2.4 syntax)
-Require all granted
-
-# Legacy Apache 2.2 syntax (fallback)
-Order Allow,Deny
-Allow from all
+# Allow access to API files
+<RequireAll>
+    Require all granted
+</RequireAll>
