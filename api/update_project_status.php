@@ -1,35 +1,42 @@
 <?php
 header('Content-Type: application/json');
-require_once dirname(__DIR__) . '/includes/auth.php';
-require_once dirname(__DIR__) . '/includes/models/Project.php';
 
-// Check authentication
-if (!Auth::isLoggedIn()) {
-    http_response_code(401);
-    echo json_encode(['success' => false, 'message' => 'Not authenticated']);
-    exit;
-}
+try {
+    require_once dirname(__DIR__) . '/includes/auth.php';
+    require_once dirname(__DIR__) . '/includes/models/Project.php';
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    echo json_encode(['success' => false, 'message' => 'Method not allowed']);
-    exit;
-}
+    // Check authentication
+    if (!Auth::isLoggedIn()) {
+        http_response_code(401);
+        echo json_encode(['success' => false, 'message' => 'Not authenticated']);
+        exit;
+    }
 
-$input = json_decode(file_get_contents('php://input'), true);
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        http_response_code(405);
+        echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+        exit;
+    }
 
-if (!isset($input['project_id']) || !isset($input['status_id'])) {
-    http_response_code(400);
-    echo json_encode(['success' => false, 'message' => 'Missing required fields']);
-    exit;
-}
+    $input = json_decode(file_get_contents('php://input'), true);
 
-$projectModel = new Project();
-$result = $projectModel->updateStatus($input['project_id'], $input['status_id']);
+    if (!isset($input['project_id']) || !isset($input['status_id'])) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Missing required fields']);
+        exit;
+    }
 
-if ($result) {
-    echo json_encode(['success' => true]);
-} else {
-    echo json_encode(['success' => false, 'message' => 'Failed to update project status']);
+    $projectModel = new Project();
+    $result = $projectModel->updateStatus($input['project_id'], $input['status_id']);
+
+    if ($result) {
+        echo json_encode(['success' => true]);
+    } else {
+        echo json_encode(['success' => false, 'message' => 'Failed to update project status']);
+    }
+
+} catch (Exception $e) {
+    http_response_code(500);
+    echo json_encode(['success' => false, 'message' => 'Server error: ' . $e->getMessage()]);
 }
 ?>
