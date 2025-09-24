@@ -1,8 +1,12 @@
 # Work Track Project Structure Diagram
 
+<!-- For better rendering, you can wrap this in a div with explicit height -->
+<!-- <div style="min-height: 1200px;"> -->
+
 ## System Architecture Overview
 
 ```mermaid
+%%{init: {'theme': 'default', 'themeVariables': { 'fontSize': '16px'}, 'flowchart': {'curve': 'linear', 'nodeSpacing': 80, 'rankSpacing': 100}}}%%
 graph TB
     subgraph "Client Layer"
         Browser["🌐 Web Browser"]
@@ -66,6 +70,45 @@ graph TB
     Views -->|Load| CSS
     Views -->|Load| JS
     Views -->|Load| Images
+```
+
+<!-- </div> -->
+
+## Alternative Vertical Layout (if above is still squashed)
+
+If the diagram appears squashed, try this vertical-optimized version:
+
+```mermaid
+%%{init: {'theme': 'default', 'flowchart': {'nodeSpacing': 100, 'rankSpacing': 120, 'curve': 'basis'}}}%%
+graph TD
+    Browser["🌐 Web Browser"]
+    Browser --> Auth["🔐 Authentication<br/>(login.php)"]
+
+    Auth --> Dashboard["📊 Dashboard<br/>(index.php)"]
+
+    Dashboard --> Calendar["📅 Calendar<br/>(calendar.php)"]
+    Dashboard --> Kanban["📋 Kanban<br/>(kanban.php)"]
+    Dashboard --> Gantt["📈 Gantt<br/>(gantt.php)"]
+    Dashboard --> Projects["📁 Projects<br/>(projects.php)"]
+    Dashboard --> Reports["📊 Reports<br/>(reports.php)"]
+
+    Calendar --> API1["API: update_project.php"]
+    Kanban --> API2["API: update_status.php"]
+    Projects --> API3["API: get_project.php"]
+
+    API1 --> Models["Data Models"]
+    API2 --> Models
+    API3 --> Models
+
+    Models --> Client["Client.php"]
+    Models --> Project["Project.php"]
+    Models --> Status["ProjectStatus.php"]
+
+    Client --> DB["🗄️ SQLite Database"]
+    Project --> DB
+    Status --> DB
+
+    DB --> Tables["Tables:<br/>• users<br/>• clients<br/>• projects<br/>• project_files<br/>• templates"]
 ```
 
 ## Directory Structure
