@@ -3,12 +3,31 @@ $pageTitle = 'Kanban Board';
 require_once 'includes/header.php';
 require_once 'includes/models/Project.php';
 require_once 'includes/models/ProjectStatus.php';
+require_once 'includes/models/Settings.php';
 
 $projectModel = new Project();
 $statusModel = new ProjectStatus();
+$settingsModel = new Settings();
 
 // Get all active statuses
 $statuses = $statusModel->getAll();
+
+// Check if we should hide completed statuses
+$hideCompleted = $settingsModel->get('kanban_hide_completed', '0') === '1';
+$completedKeywords = ['completed', 'complete', 'done', 'finished'];
+
+// Filter statuses if hide_completed is enabled
+if ($hideCompleted) {
+    $statuses = array_filter($statuses, function($status) use ($completedKeywords) {
+        $statusName = strtolower($status['name']);
+        foreach ($completedKeywords as $keyword) {
+            if (stripos($statusName, $keyword) !== false) {
+                return false;
+            }
+        }
+        return true;
+    });
+}
 
 // Get projects grouped by status
 $projectsByStatus = [];

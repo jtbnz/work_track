@@ -2,8 +2,10 @@
 $pageTitle = 'Project Status Management';
 require_once 'includes/header.php';
 require_once 'includes/models/ProjectStatus.php';
+require_once 'includes/models/Settings.php';
 
 $statusModel = new ProjectStatus();
+$settingsModel = new Settings();
 $message = '';
 $messageType = '';
 
@@ -60,6 +62,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $message = 'Failed to update status order.';
             $messageType = 'danger';
         }
+    } elseif ($action === 'update_settings') {
+        $hideCompleted = isset($_POST['kanban_hide_completed']) ? '1' : '0';
+        if ($settingsModel->set('kanban_hide_completed', $hideCompleted)) {
+            $message = 'Kanban settings updated successfully!';
+            $messageType = 'success';
+        } else {
+            $message = 'Failed to update settings.';
+            $messageType = 'danger';
+        }
     }
 }
 
@@ -73,6 +84,9 @@ if (isset($_GET['edit'])) {
 }
 
 $showForm = isset($_GET['action']) && $_GET['action'] === 'new' || $editStatus;
+
+// Get current kanban settings
+$kanbanHideCompleted = $settingsModel->get('kanban_hide_completed', '0') === '1';
 ?>
 
 <div class="page-header">
@@ -282,6 +296,30 @@ tr.dragging {
     opacity: 0.5;
 }
 </style>
+
+<!-- Kanban Settings Section -->
+<div class="settings-container" style="margin-top: 40px;">
+    <h2 style="margin-bottom: 20px;">Kanban Board Settings</h2>
+    <div class="form-container">
+        <form method="POST">
+            <input type="hidden" name="action" value="update_settings">
+
+            <div class="form-group">
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                    <input type="checkbox" name="kanban_hide_completed" <?php echo $kanbanHideCompleted ? 'checked' : ''; ?>>
+                    <span>Hide completed statuses on Kanban board</span>
+                </label>
+                <small style="color: #666; display: block; margin-top: 5px; margin-left: 30px;">
+                    When enabled, any status containing "Completed", "Complete", "Done", or "Finished" will be hidden from the Kanban board by default.
+                </small>
+            </div>
+
+            <div style="margin-top: 15px;">
+                <button type="submit" class="btn btn-primary">Save Settings</button>
+            </div>
+        </form>
+    </div>
+</div>
 <?php endif; ?>
 
 <?php require_once 'includes/footer.php'; ?>
