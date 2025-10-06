@@ -16,18 +16,26 @@ $statuses = $statusModel->getAll();
 $hideCompleted = $settingsModel->get('kanban_hide_completed', '0') === '1';
 $completedKeywords = ['completed', 'complete', 'done', 'finished'];
 
-// Filter statuses if hide_completed is enabled
-if ($hideCompleted) {
-    $statuses = array_filter($statuses, function($status) use ($completedKeywords) {
+// Filter statuses based on visibility settings
+$statuses = array_filter($statuses, function($status) use ($settingsModel, $hideCompleted, $completedKeywords) {
+    // First check individual status visibility setting (default is visible)
+    $isVisible = $settingsModel->get('kanban_status_visible_' . $status['id'], '1') === '1';
+    if (!$isVisible) {
+        return false;
+    }
+
+    // Then check auto-hide completed setting
+    if ($hideCompleted) {
         $statusName = strtolower($status['name']);
         foreach ($completedKeywords as $keyword) {
             if (stripos($statusName, $keyword) !== false) {
                 return false;
             }
         }
-        return true;
-    });
-}
+    }
+
+    return true;
+});
 
 // Get projects grouped by status
 $projectsByStatus = [];

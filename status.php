@@ -63,8 +63,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $messageType = 'danger';
         }
     } elseif ($action === 'update_settings') {
+        $success = true;
+
+        // Update hide_completed setting
         $hideCompleted = isset($_POST['kanban_hide_completed']) ? '1' : '0';
-        if ($settingsModel->set('kanban_hide_completed', $hideCompleted)) {
+        $success = $settingsModel->set('kanban_hide_completed', $hideCompleted) && $success;
+
+        // Update individual status visibility settings
+        $allStatuses = $statusModel->getAll(true); // Include inactive
+        foreach ($allStatuses as $status) {
+            $visibleValue = isset($_POST['status_visible_' . $status['id']]) ? '1' : '0';
+            $success = $settingsModel->set('kanban_status_visible_' . $status['id'], $visibleValue) && $success;
+        }
+
+        if ($success) {
             $message = 'Kanban settings updated successfully!';
             $messageType = 'success';
         } else {
@@ -307,14 +319,34 @@ tr.dragging {
             <div class="form-group">
                 <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
                     <input type="checkbox" name="kanban_hide_completed" <?php echo $kanbanHideCompleted ? 'checked' : ''; ?>>
-                    <span>Hide completed statuses on Kanban board</span>
+                    <span>Auto-hide completed statuses</span>
                 </label>
                 <small style="color: #666; display: block; margin-top: 5px; margin-left: 30px;">
-                    When enabled, any status containing "Completed", "Complete", "Done", or "Finished" will be hidden from the Kanban board by default.
+                    When enabled, any status containing "Completed", "Complete", "Done", or "Finished" will be hidden from the Kanban board.
                 </small>
             </div>
 
-            <div style="margin-top: 15px;">
+            <div class="form-group" style="margin-top: 25px;">
+                <h3 style="font-size: 16px; margin-bottom: 15px;">Individual Status Visibility</h3>
+                <small style="color: #666; display: block; margin-bottom: 15px;">
+                    Control which statuses appear on the Kanban board. Unchecked statuses will be hidden.
+                </small>
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px;">
+                    <?php foreach ($statuses as $status): ?>
+                        <?php
+                        $isVisible = $settingsModel->get('kanban_status_visible_' . $status['id'], '1') === '1';
+                        ?>
+                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 10px; background: #f8f9fa; border-radius: 5px;">
+                            <input type="checkbox" name="status_visible_<?php echo $status['id']; ?>" <?php echo $isVisible ? 'checked' : ''; ?>>
+                            <span class="status-badge" style="background: <?php echo $status['color']; ?>; color: white; padding: 4px 8px; border-radius: 3px; font-size: 13px;">
+                                <?php echo htmlspecialchars($status['name']); ?>
+                            </span>
+                        </label>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+
+            <div style="margin-top: 20px;">
                 <button type="submit" class="btn btn-primary">Save Settings</button>
             </div>
         </form>
