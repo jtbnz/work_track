@@ -1,11 +1,41 @@
 <?php
+require_once 'includes/db.php';
+require_once 'includes/auth.php';
+
+// Handle download action BEFORE any output
+if (isset($_GET['download']) && $_GET['download']) {
+    Auth::requireAuth();
+    $filename = basename($_GET['download']);
+    $filepath = dirname(__FILE__) . '/backups/' . $filename;
+
+    if (file_exists($filepath) && strpos($filename, 'worktrack_backup_') === 0) {
+        header('Content-Type: application/sql');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Content-Length: ' . filesize($filepath));
+        readfile($filepath);
+        exit;
+    } else {
+        $_SESSION['backup_message'] = 'Backup file not found';
+        $_SESSION['backup_message_type'] = 'danger';
+        header('Location: backup.php');
+        exit;
+    }
+}
+
 $pageTitle = 'Database Backup';
 require_once 'includes/header.php';
-require_once 'includes/db.php';
 
 $db = Database::getInstance();
 $message = '';
 $messageType = '';
+
+// Check for session messages
+if (isset($_SESSION['backup_message'])) {
+    $message = $_SESSION['backup_message'];
+    $messageType = $_SESSION['backup_message_type'];
+    unset($_SESSION['backup_message']);
+    unset($_SESSION['backup_message_type']);
+}
 
 // Handle backup action
 if (isset($_POST['action']) && $_POST['action'] === 'backup') {
@@ -25,25 +55,33 @@ if (isset($_POST['action']) && $_POST['action'] === 'backup') {
         $dbPath = dirname(__FILE__) . '/database/worktrack.db';
 
         if ($backupType === 'full') {
-            // Full database backup using SQLite dump
-            $output = [];
-            $returnCode = 0;
-            exec("sqlite3 '$dbPath' .dump", $output, $returnCode);
+            // Check if exec is available and sqlite3 command exists
+            $useExec = function_exists('exec') && !in_array('exec', array_map('trim', explode(',', ini_get('disable_functions'))));
 
-            if ($returnCode === 0) {
-                file_put_contents($backupFile, implode("\n", $output));
+            if ($useExec) {
+                // Try SQLite dump command
+                $output = [];
+                $returnCode = 0;
+                @exec("sqlite3 '$dbPath' .dump", $output, $returnCode);
 
-                // Log the backup
-                Auth::logAudit('backup', 0, 'CREATE', [
-                    'type' => 'full',
-                    'file' => basename($backupFile),
-                    'size' => filesize($backupFile)
-                ]);
+                if ($returnCode === 0 && !empty($output)) {
+                    file_put_contents($backupFile, implode("\n", $output));
 
-                $message = 'Database backup created successfully: ' . basename($backupFile);
-                $messageType = 'success';
-            } else {
-                // Fallback to PHP-based backup
+                    Auth::logAudit('backup', 0, 'CREATE', [
+                        'type' => 'full',
+                        'file' => basename($backupFile),
+                        'size' => filesize($backupFile)
+                    ]);
+
+                    $message = 'Database backup created successfully: ' . basename($backupFile);
+                    $messageType = 'success';
+                } else {
+                    $useExec = false; // Fall through to PHP method
+                }
+            }
+
+            if (!$useExec) {
+                // PHP-based backup
                 $sql = generateSQLDump($db);
                 file_put_contents($backupFile, $sql);
 
@@ -53,7 +91,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'backup') {
                     'size' => filesize($backupFile)
                 ]);
 
-                $message = 'Database backup created successfully (PHP method): ' . basename($backupFile);
+                $message = 'Database backup created successfully: ' . basename($backupFile);
                 $messageType = 'success';
             }
         } else {
@@ -72,23 +110,6 @@ if (isset($_POST['action']) && $_POST['action'] === 'backup') {
         }
     } catch (Exception $e) {
         $message = 'Backup failed: ' . $e->getMessage();
-        $messageType = 'danger';
-    }
-}
-
-// Handle download action
-if (isset($_GET['download']) && $_GET['download']) {
-    $filename = basename($_GET['download']);
-    $filepath = dirname(__FILE__) . '/backups/' . $filename;
-
-    if (file_exists($filepath) && strpos($filename, 'worktrack_backup_') === 0) {
-        header('Content-Type: application/sql');
-        header('Content-Disposition: attachment; filename="' . $filename . '"');
-        header('Content-Length: ' . filesize($filepath));
-        readfile($filepath);
-        exit;
-    } else {
-        $message = 'Backup file not found';
         $messageType = 'danger';
     }
 }
