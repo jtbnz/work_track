@@ -122,7 +122,13 @@ if (isset($_SESSION['kanban_message'])) {
 
 <style>
 .kanban-container {
-    padding: 20px 0;
+    position: relative;
+    left: 50%;
+    right: 50%;
+    margin-left: -50vw;
+    margin-right: -50vw;
+    width: 100vw;
+    padding: 20px;
 }
 
 .kanban-board {
