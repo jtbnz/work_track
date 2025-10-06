@@ -11,7 +11,7 @@ class Settings {
     }
 
     private function ensureTableExists(): void {
-        $this->db->exec("
+        $this->db->query("
             CREATE TABLE IF NOT EXISTS settings (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 setting_key TEXT NOT NULL UNIQUE,
@@ -22,7 +22,7 @@ class Settings {
         ");
 
         // Insert default settings if they don't exist
-        $this->db->exec("
+        $this->db->query("
             INSERT OR IGNORE INTO settings (setting_key, setting_value)
             VALUES ('kanban_hide_completed', '0')
         ");
