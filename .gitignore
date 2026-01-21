@@ -4,9 +4,9 @@ database/*.db-journal
 database/*.db-shm
 database/*.db-wal
 
-# Upload files (except .gitkeep)
-uploads/*
-!uploads/.gitkeep
+# Upload files (except .gitkeep and directory structure)
+uploads/**/*
+!uploads/**/.gitkeep
 
 # macOS
 .DS_Store
