@@ -454,117 +454,111 @@ textarea.form-control {
 </style>
 
 <script>
-// Store references to modal elements
-let emailModalElements = null;
-
-function getEmailModalElements() {
-    if (!emailModalElements) {
-        emailModalElements = {
-            modal: document.getElementById('emailModal'),
-            quoteId: document.getElementById('emailQuoteId'),
-            to: document.getElementById('emailTo'),
-            subject: document.getElementById('emailSubject'),
-            message: document.getElementById('emailMessage'),
-            updateStatus: document.getElementById('emailUpdateStatus'),
-            error: document.getElementById('emailError'),
-            success: document.getElementById('emailSuccess'),
-            sendBtn: document.getElementById('sendEmailBtn')
-        };
-    }
-    return emailModalElements;
-}
-
 function openEmailModal(quoteId, quoteNumber, clientEmail, companyName) {
-    const els = getEmailModalElements();
-    if (!els.modal) {
-        console.error('Email modal not found');
+    var modal = document.getElementById('emailModal');
+    var quoteIdField = document.getElementById('emailQuoteId');
+    var toField = document.getElementById('emailTo');
+    var subjectField = document.getElementById('emailSubject');
+    var messageField = document.getElementById('emailMessage');
+    var updateStatusField = document.getElementById('emailUpdateStatus');
+    var errorDiv = document.getElementById('emailError');
+    var successDiv = document.getElementById('emailSuccess');
+    var sendBtn = document.getElementById('sendEmailBtn');
+
+    if (!modal) {
         alert('Error: Email modal not found. Please refresh the page.');
         return;
     }
 
-    els.quoteId.value = quoteId;
-    els.to.value = clientEmail || '';
-    els.subject.value = 'Quote ' + quoteNumber + ' from ' + companyName;
-    els.message.value = '';
-    els.updateStatus.checked = true;
-    els.error.style.display = 'none';
-    els.success.style.display = 'none';
-    els.sendBtn.disabled = false;
-    els.sendBtn.textContent = 'Send Email';
-    els.modal.style.display = 'flex';
+    quoteIdField.value = quoteId;
+    toField.value = clientEmail || '';
+    subjectField.value = 'Quote ' + quoteNumber + ' from ' + companyName;
+    messageField.value = '';
+    updateStatusField.checked = true;
+    errorDiv.style.display = 'none';
+    successDiv.style.display = 'none';
+    sendBtn.disabled = false;
+    sendBtn.textContent = 'Send Email';
+    modal.style.display = 'flex';
 }
 
 function closeEmailModal() {
-    const els = getEmailModalElements();
-    if (els.modal) {
-        els.modal.style.display = 'none';
+    var modal = document.getElementById('emailModal');
+    if (modal) {
+        modal.style.display = 'none';
     }
 }
 
 async function sendQuoteEmail() {
-    const els = getEmailModalElements();
+    var sendBtn = document.getElementById('sendEmailBtn');
+    var errorDiv = document.getElementById('emailError');
+    var successDiv = document.getElementById('emailSuccess');
+    var quoteIdField = document.getElementById('emailQuoteId');
+    var toField = document.getElementById('emailTo');
+    var subjectField = document.getElementById('emailSubject');
+    var messageField = document.getElementById('emailMessage');
+    var updateStatusField = document.getElementById('emailUpdateStatus');
 
-    if (!els.sendBtn || !els.error || !els.success) {
-        console.error('Required elements not found:', els);
+    if (!sendBtn || !errorDiv || !successDiv) {
         alert('Error: Required form elements not found. Please refresh the page.');
         return;
     }
 
     // Reset messages
-    els.error.style.display = 'none';
-    els.success.style.display = 'none';
+    errorDiv.style.display = 'none';
+    successDiv.style.display = 'none';
 
     // Validate email
-    const toEmail = els.to.value.trim();
+    var toEmail = toField.value.trim();
     if (!toEmail) {
-        els.error.textContent = 'Please enter a recipient email address';
-        els.error.style.display = 'block';
+        errorDiv.textContent = 'Please enter a recipient email address';
+        errorDiv.style.display = 'block';
         return;
     }
 
     // Disable button and show loading
-    els.sendBtn.disabled = true;
-    els.sendBtn.textContent = 'Sending...';
+    sendBtn.disabled = true;
+    sendBtn.textContent = 'Sending...';
 
     try {
-        const response = await fetch('api/quoteEmail.php', {
+        var response = await fetch('api/quoteEmail.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                quote_id: els.quoteId.value,
+                quote_id: quoteIdField.value,
                 to_email: toEmail,
-                subject: els.subject.value.trim(),
-                message: els.message.value.trim(),
-                update_status: els.updateStatus.checked
+                subject: subjectField.value.trim(),
+                message: messageField.value.trim(),
+                update_status: updateStatusField.checked
             })
         });
 
-        const data = await response.json();
+        var data = await response.json();
 
         if (data.success) {
-            els.success.textContent = data.message;
-            els.success.style.display = 'block';
-            els.sendBtn.textContent = 'Sent!';
+            successDiv.textContent = data.message;
+            successDiv.style.display = 'block';
+            sendBtn.textContent = 'Sent!';
 
             // Close modal and refresh page after delay
-            setTimeout(() => {
+            setTimeout(function() {
                 closeEmailModal();
                 window.location.reload();
             }, 1500);
         } else {
-            els.error.textContent = data.message || 'Failed to send email';
-            els.error.style.display = 'block';
-            els.sendBtn.disabled = false;
-            els.sendBtn.textContent = 'Send Email';
+            errorDiv.textContent = data.message || 'Failed to send email';
+            errorDiv.style.display = 'block';
+            sendBtn.disabled = false;
+            sendBtn.textContent = 'Send Email';
         }
     } catch (error) {
         console.error('Email send error:', error);
-        els.error.textContent = 'An error occurred while sending the email';
-        els.error.style.display = 'block';
-        els.sendBtn.disabled = false;
-        els.sendBtn.textContent = 'Send Email';
+        errorDiv.textContent = 'An error occurred while sending the email';
+        errorDiv.style.display = 'block';
+        sendBtn.disabled = false;
+        sendBtn.textContent = 'Send Email';
     }
 }
 
@@ -577,10 +571,7 @@ document.addEventListener('keydown', function(e) {
 
 // Close modal when clicking outside
 document.addEventListener('DOMContentLoaded', function() {
-    // Reset element cache on DOM ready
-    emailModalElements = null;
-
-    const modal = document.getElementById('emailModal');
+    var modal = document.getElementById('emailModal');
     if (modal) {
         modal.addEventListener('click', function(e) {
             if (e.target === this) {
