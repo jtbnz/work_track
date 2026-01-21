@@ -4,14 +4,31 @@
  * Sends a quote as PDF attachment to the client
  */
 
-require_once __DIR__ . '/../includes/auth.php';
-Auth::requireAuth();
-
-require_once __DIR__ . '/../includes/EmailService.php';
-require_once __DIR__ . '/../includes/models/Quote.php';
-require_once __DIR__ . '/../includes/db.php';
-
+// Set JSON header early and disable HTML error display
 header('Content-Type: application/json');
+ini_set('display_errors', 0);
+error_reporting(E_ALL);
+
+// Custom error handler to return JSON
+set_error_handler(function($severity, $message, $file, $line) {
+    throw new ErrorException($message, 0, $severity, $file, $line);
+});
+
+try {
+    require_once __DIR__ . '/../includes/auth.php';
+    Auth::requireAuth();
+
+    require_once __DIR__ . '/../includes/EmailService.php';
+    require_once __DIR__ . '/../includes/models/Quote.php';
+    require_once __DIR__ . '/../includes/db.php';
+} catch (Throwable $e) {
+    http_response_code(500);
+    echo json_encode([
+        'success' => false,
+        'message' => 'Server configuration error: ' . $e->getMessage()
+    ]);
+    exit;
+}
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -97,11 +114,11 @@ try {
         ]);
     }
 
-} catch (Exception $e) {
-    error_log("Quote email error: " . $e->getMessage());
+} catch (Throwable $e) {
+    error_log("Quote email error: " . $e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine());
     http_response_code(500);
     echo json_encode([
         'success' => false,
-        'message' => 'An error occurred while sending the email'
+        'message' => 'Error: ' . $e->getMessage()
     ]);
 }
