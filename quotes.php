@@ -454,51 +454,77 @@ textarea.form-control {
 </style>
 
 <script>
+// Store references to modal elements
+let emailModalElements = null;
+
+function getEmailModalElements() {
+    if (!emailModalElements) {
+        emailModalElements = {
+            modal: document.getElementById('emailModal'),
+            quoteId: document.getElementById('emailQuoteId'),
+            to: document.getElementById('emailTo'),
+            subject: document.getElementById('emailSubject'),
+            message: document.getElementById('emailMessage'),
+            updateStatus: document.getElementById('emailUpdateStatus'),
+            error: document.getElementById('emailError'),
+            success: document.getElementById('emailSuccess'),
+            sendBtn: document.getElementById('sendEmailBtn')
+        };
+    }
+    return emailModalElements;
+}
+
 function openEmailModal(quoteId, quoteNumber, clientEmail, companyName) {
-    document.getElementById('emailQuoteId').value = quoteId;
-    document.getElementById('emailTo').value = clientEmail || '';
-    document.getElementById('emailSubject').value = 'Quote ' + quoteNumber + ' from ' + companyName;
-    document.getElementById('emailMessage').value = '';
-    document.getElementById('emailUpdateStatus').checked = true;
-    document.getElementById('emailError').style.display = 'none';
-    document.getElementById('emailSuccess').style.display = 'none';
-    document.getElementById('sendEmailBtn').disabled = false;
-    document.getElementById('sendEmailBtn').textContent = 'Send Email';
-    document.getElementById('emailModal').style.display = 'flex';
+    const els = getEmailModalElements();
+    if (!els.modal) {
+        console.error('Email modal not found');
+        alert('Error: Email modal not found. Please refresh the page.');
+        return;
+    }
+
+    els.quoteId.value = quoteId;
+    els.to.value = clientEmail || '';
+    els.subject.value = 'Quote ' + quoteNumber + ' from ' + companyName;
+    els.message.value = '';
+    els.updateStatus.checked = true;
+    els.error.style.display = 'none';
+    els.success.style.display = 'none';
+    els.sendBtn.disabled = false;
+    els.sendBtn.textContent = 'Send Email';
+    els.modal.style.display = 'flex';
 }
 
 function closeEmailModal() {
-    const modal = document.getElementById('emailModal');
-    if (modal) {
-        modal.style.display = 'none';
+    const els = getEmailModalElements();
+    if (els.modal) {
+        els.modal.style.display = 'none';
     }
 }
 
 async function sendQuoteEmail() {
-    const btn = document.getElementById('sendEmailBtn');
-    const errorDiv = document.getElementById('emailError');
-    const successDiv = document.getElementById('emailSuccess');
+    const els = getEmailModalElements();
 
-    if (!btn || !errorDiv || !successDiv) {
-        console.error('Required elements not found');
+    if (!els.sendBtn || !els.error || !els.success) {
+        console.error('Required elements not found:', els);
+        alert('Error: Required form elements not found. Please refresh the page.');
         return;
     }
 
     // Reset messages
-    errorDiv.style.display = 'none';
-    successDiv.style.display = 'none';
+    els.error.style.display = 'none';
+    els.success.style.display = 'none';
 
     // Validate email
-    const toEmail = document.getElementById('emailTo').value.trim();
+    const toEmail = els.to.value.trim();
     if (!toEmail) {
-        errorDiv.textContent = 'Please enter a recipient email address';
-        errorDiv.style.display = 'block';
+        els.error.textContent = 'Please enter a recipient email address';
+        els.error.style.display = 'block';
         return;
     }
 
     // Disable button and show loading
-    btn.disabled = true;
-    btn.textContent = 'Sending...';
+    els.sendBtn.disabled = true;
+    els.sendBtn.textContent = 'Sending...';
 
     try {
         const response = await fetch('api/quoteEmail.php', {
@@ -507,20 +533,20 @@ async function sendQuoteEmail() {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                quote_id: document.getElementById('emailQuoteId').value,
+                quote_id: els.quoteId.value,
                 to_email: toEmail,
-                subject: document.getElementById('emailSubject').value.trim(),
-                message: document.getElementById('emailMessage').value.trim(),
-                update_status: document.getElementById('emailUpdateStatus').checked
+                subject: els.subject.value.trim(),
+                message: els.message.value.trim(),
+                update_status: els.updateStatus.checked
             })
         });
 
         const data = await response.json();
 
         if (data.success) {
-            successDiv.textContent = data.message;
-            successDiv.style.display = 'block';
-            btn.textContent = 'Sent!';
+            els.success.textContent = data.message;
+            els.success.style.display = 'block';
+            els.sendBtn.textContent = 'Sent!';
 
             // Close modal and refresh page after delay
             setTimeout(() => {
@@ -528,16 +554,17 @@ async function sendQuoteEmail() {
                 window.location.reload();
             }, 1500);
         } else {
-            errorDiv.textContent = data.message || 'Failed to send email';
-            errorDiv.style.display = 'block';
-            btn.disabled = false;
-            btn.textContent = 'Send Email';
+            els.error.textContent = data.message || 'Failed to send email';
+            els.error.style.display = 'block';
+            els.sendBtn.disabled = false;
+            els.sendBtn.textContent = 'Send Email';
         }
     } catch (error) {
-        errorDiv.textContent = 'An error occurred while sending the email';
-        errorDiv.style.display = 'block';
-        btn.disabled = false;
-        btn.textContent = 'Send Email';
+        console.error('Email send error:', error);
+        els.error.textContent = 'An error occurred while sending the email';
+        els.error.style.display = 'block';
+        els.sendBtn.disabled = false;
+        els.sendBtn.textContent = 'Send Email';
     }
 }
 
@@ -550,6 +577,9 @@ document.addEventListener('keydown', function(e) {
 
 // Close modal when clicking outside
 document.addEventListener('DOMContentLoaded', function() {
+    // Reset element cache on DOM ready
+    emailModalElements = null;
+
     const modal = document.getElementById('emailModal');
     if (modal) {
         modal.addEventListener('click', function(e) {
