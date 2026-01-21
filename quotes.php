@@ -107,6 +107,16 @@ $showArchived = !empty($_GET['show_archived']);
 // Get quotes
 $quotes = $quoteModel->getAll($filters);
 
+// Group quotes by quote_number for revision display
+$groupedQuotes = [];
+foreach ($quotes as $quote) {
+    $quoteNum = $quote['quote_number'];
+    if (!isset($groupedQuotes[$quoteNum])) {
+        $groupedQuotes[$quoteNum] = [];
+    }
+    $groupedQuotes[$quoteNum][] = $quote;
+}
+
 // Get clients for filter dropdown
 $clients = $clientModel->getAll();
 
@@ -183,30 +193,41 @@ $statuses = [
                     </td>
                 </tr>
             <?php else: ?>
-                <?php foreach ($quotes as $quote): ?>
+                <?php foreach ($groupedQuotes as $quoteNumber => $revisions): ?>
                     <?php
-                    $statusInfo = $statuses[$quote['status']] ?? ['label' => $quote['status'], 'color' => '#6c757d'];
-                    $isExpired = $quote['status'] === 'sent' && $quote['expiry_date'] && strtotime($quote['expiry_date']) < time();
-                    $isArchived = $quote['status'] === 'archived';
+                    $latestQuote = $revisions[0]; // First one is latest (highest revision)
+                    $hasRevisions = count($revisions) > 1;
+                    $statusInfo = $statuses[$latestQuote['status']] ?? ['label' => $latestQuote['status'], 'color' => '#6c757d'];
+                    $isExpired = $latestQuote['status'] === 'sent' && $latestQuote['expiry_date'] && strtotime($latestQuote['expiry_date']) < time();
+                    $isArchived = $latestQuote['status'] === 'archived';
                     ?>
-                    <tr class="<?php echo $isArchived ? 'archived-row' : ''; ?>">
+                    <!-- Main/Latest Quote Row -->
+                    <tr class="quote-main-row <?php echo $isArchived ? 'archived-row' : ''; ?>" data-quote-number="<?php echo htmlspecialchars($quoteNumber); ?>">
                         <td>
-                            <strong><?php echo htmlspecialchars($quote['quote_number']); ?></strong>
-                            <?php if ($quote['revision'] > 1): ?>
-                                <span class="badge badge-info">Rev <?php echo $quote['revision']; ?></span>
+                            <?php if ($hasRevisions): ?>
+                                <button type="button" class="revision-toggle" onclick="toggleRevisions('<?php echo htmlspecialchars($quoteNumber); ?>')" title="Show/hide previous revisions">
+                                    <span class="toggle-icon">▶</span>
+                                </button>
+                            <?php endif; ?>
+                            <strong><?php echo htmlspecialchars($quoteNumber); ?></strong>
+                            <?php if ($latestQuote['revision'] > 1): ?>
+                                <span class="badge badge-info">Rev <?php echo $latestQuote['revision']; ?></span>
+                            <?php endif; ?>
+                            <?php if ($hasRevisions): ?>
+                                <span class="badge badge-secondary revision-count"><?php echo count($revisions); ?> versions</span>
                             <?php endif; ?>
                         </td>
                         <td>
-                            <?php echo htmlspecialchars($quote['client_name'] ?? 'No client'); ?>
-                            <?php if ($quote['project_title']): ?>
-                                <br><small style="color: #666;"><?php echo htmlspecialchars($quote['project_title']); ?></small>
+                            <?php echo htmlspecialchars($latestQuote['client_name'] ?? 'No client'); ?>
+                            <?php if ($latestQuote['project_title']): ?>
+                                <br><small style="color: #666;"><?php echo htmlspecialchars($latestQuote['project_title']); ?></small>
                             <?php endif; ?>
                         </td>
-                        <td><?php echo date('M j, Y', strtotime($quote['quote_date'])); ?></td>
+                        <td><?php echo date('M j, Y', strtotime($latestQuote['quote_date'])); ?></td>
                         <td>
-                            <?php if ($quote['expiry_date']): ?>
+                            <?php if ($latestQuote['expiry_date']): ?>
                                 <span class="<?php echo $isExpired ? 'text-danger' : ''; ?>">
-                                    <?php echo date('M j, Y', strtotime($quote['expiry_date'])); ?>
+                                    <?php echo date('M j, Y', strtotime($latestQuote['expiry_date'])); ?>
                                 </span>
                                 <?php if ($isExpired): ?>
                                     <span class="badge badge-warning">Expired</span>
@@ -216,8 +237,8 @@ $statuses = [
                             <?php endif; ?>
                         </td>
                         <td>
-                            <strong>$<?php echo number_format($quote['total_incl_gst'], 2); ?></strong>
-                            <br><small style="color: #666;">excl: $<?php echo number_format($quote['total_excl_gst'], 2); ?></small>
+                            <strong>$<?php echo number_format($latestQuote['total_incl_gst'], 2); ?></strong>
+                            <br><small style="color: #666;">excl: $<?php echo number_format($latestQuote['total_excl_gst'], 2); ?></small>
                         </td>
                         <td>
                             <span class="badge" style="background-color: <?php echo $statusInfo['color']; ?>; color: white;">
@@ -226,77 +247,120 @@ $statuses = [
                         </td>
                         <td>
                             <div class="action-buttons">
-                                <a href="quoteBuilder.php?id=<?php echo $quote['id']; ?>" class="btn btn-sm btn-primary">
-                                    <?php echo $quote['status'] === 'draft' ? 'Edit' : 'View'; ?>
+                                <a href="quoteBuilder.php?id=<?php echo $latestQuote['id']; ?>" class="btn btn-sm btn-primary">
+                                    <?php echo $latestQuote['status'] === 'draft' ? 'Edit' : 'View'; ?>
                                 </a>
 
-                                <a href="api/quotePdf.php?id=<?php echo $quote['id']; ?>" class="btn btn-sm btn-secondary" target="_blank" title="Download PDF">PDF</a>
+                                <a href="api/quotePdf.php?id=<?php echo $latestQuote['id']; ?>" class="btn btn-sm btn-secondary" target="_blank" title="Download PDF">PDF</a>
 
-                                <button type="button" class="btn btn-sm btn-info" onclick="openEmailModal(<?php echo $quote['id']; ?>, '<?php echo htmlspecialchars($quote['quote_number'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($quote['client_email'] ?? '', ENT_QUOTES); ?>', '<?php echo htmlspecialchars($companyName, ENT_QUOTES); ?>')" title="Send Email">
+                                <button type="button" class="btn btn-sm btn-info" onclick="openEmailModal(<?php echo $latestQuote['id']; ?>, '<?php echo htmlspecialchars($latestQuote['quote_number'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($latestQuote['client_email'] ?? '', ENT_QUOTES); ?>', '<?php echo htmlspecialchars($companyName, ENT_QUOTES); ?>')" title="Send Email">
                                     Email
                                 </button>
 
-                                <?php if ($quote['status'] === 'draft'): ?>
+                                <?php if ($latestQuote['status'] === 'draft'): ?>
                                     <form method="POST" style="display: inline-block;">
                                         <input type="hidden" name="action" value="updateStatus">
-                                        <input type="hidden" name="id" value="<?php echo $quote['id']; ?>">
+                                        <input type="hidden" name="id" value="<?php echo $latestQuote['id']; ?>">
                                         <input type="hidden" name="status" value="sent">
                                         <button type="submit" class="btn btn-sm btn-info" onclick="return confirm('Mark this quote as sent?');">Send</button>
                                     </form>
                                 <?php endif; ?>
 
-                                <?php if ($quote['status'] === 'sent'): ?>
+                                <?php if ($latestQuote['status'] === 'sent'): ?>
                                     <form method="POST" style="display: inline-block;">
                                         <input type="hidden" name="action" value="updateStatus">
-                                        <input type="hidden" name="id" value="<?php echo $quote['id']; ?>">
+                                        <input type="hidden" name="id" value="<?php echo $latestQuote['id']; ?>">
                                         <input type="hidden" name="status" value="accepted">
                                         <button type="submit" class="btn btn-sm btn-success">Accept</button>
                                     </form>
                                     <form method="POST" style="display: inline-block;">
                                         <input type="hidden" name="action" value="updateStatus">
-                                        <input type="hidden" name="id" value="<?php echo $quote['id']; ?>">
+                                        <input type="hidden" name="id" value="<?php echo $latestQuote['id']; ?>">
                                         <input type="hidden" name="status" value="declined">
                                         <button type="submit" class="btn btn-sm btn-danger">Decline</button>
                                     </form>
                                 <?php endif; ?>
 
-                                <?php if (in_array($quote['status'], ['sent', 'accepted', 'declined'])): ?>
+                                <?php if (in_array($latestQuote['status'], ['sent', 'accepted', 'declined'])): ?>
                                     <form method="POST" style="display: inline-block;">
                                         <input type="hidden" name="action" value="createRevision">
-                                        <input type="hidden" name="id" value="<?php echo $quote['id']; ?>">
+                                        <input type="hidden" name="id" value="<?php echo $latestQuote['id']; ?>">
                                         <button type="submit" class="btn btn-sm btn-warning">Revise</button>
                                     </form>
                                 <?php endif; ?>
 
-                                <?php if ($quote['status'] === 'accepted'): ?>
-                                    <!-- TODO: Phase 5 - Convert to Invoice -->
+                                <?php if ($latestQuote['status'] === 'accepted'): ?>
                                     <button class="btn btn-sm btn-success" disabled title="Coming soon">Invoice</button>
                                 <?php endif; ?>
 
-                                <?php if ($quote['status'] === 'draft'): ?>
+                                <?php if ($latestQuote['status'] === 'draft'): ?>
                                     <form method="POST" style="display: inline-block;" onsubmit="return confirm('Are you sure you want to delete this quote?');">
                                         <input type="hidden" name="action" value="delete">
-                                        <input type="hidden" name="id" value="<?php echo $quote['id']; ?>">
+                                        <input type="hidden" name="id" value="<?php echo $latestQuote['id']; ?>">
                                         <button type="submit" class="btn btn-sm btn-danger">Delete</button>
                                     </form>
                                 <?php endif; ?>
 
-                                <?php if ($quote['status'] === 'archived'): ?>
+                                <?php if ($latestQuote['status'] === 'archived'): ?>
                                     <form method="POST" style="display: inline-block;">
                                         <input type="hidden" name="action" value="unarchive">
-                                        <input type="hidden" name="id" value="<?php echo $quote['id']; ?>">
+                                        <input type="hidden" name="id" value="<?php echo $latestQuote['id']; ?>">
                                         <button type="submit" class="btn btn-sm btn-outline" title="Restore from archive">Restore</button>
                                     </form>
-                                <?php elseif (!in_array($quote['status'], ['draft'])): ?>
+                                <?php elseif (!in_array($latestQuote['status'], ['draft'])): ?>
                                     <form method="POST" style="display: inline-block;">
                                         <input type="hidden" name="action" value="archive">
-                                        <input type="hidden" name="id" value="<?php echo $quote['id']; ?>">
+                                        <input type="hidden" name="id" value="<?php echo $latestQuote['id']; ?>">
                                         <button type="submit" class="btn btn-sm btn-outline" title="Archive quote">Archive</button>
                                     </form>
                                 <?php endif; ?>
                             </div>
                         </td>
                     </tr>
+
+                    <?php if ($hasRevisions): ?>
+                        <?php // Show older revisions (skip first which is latest) ?>
+                        <?php for ($i = 1; $i < count($revisions); $i++): ?>
+                            <?php
+                            $quote = $revisions[$i];
+                            $statusInfo = $statuses[$quote['status']] ?? ['label' => $quote['status'], 'color' => '#6c757d'];
+                            $isExpired = $quote['status'] === 'sent' && $quote['expiry_date'] && strtotime($quote['expiry_date']) < time();
+                            $isArchived = $quote['status'] === 'archived';
+                            ?>
+                            <tr class="revision-row <?php echo $isArchived ? 'archived-row' : ''; ?>" data-parent="<?php echo htmlspecialchars($quoteNumber); ?>" style="display: none;">
+                                <td style="padding-left: 40px;">
+                                    <span style="color: #999;">└</span>
+                                    <span style="color: #666;"><?php echo htmlspecialchars($quote['quote_number']); ?></span>
+                                    <span class="badge badge-secondary">Rev <?php echo $quote['revision']; ?></span>
+                                </td>
+                                <td style="color: #666;">
+                                    <?php echo htmlspecialchars($quote['client_name'] ?? 'No client'); ?>
+                                </td>
+                                <td style="color: #666;"><?php echo date('M j, Y', strtotime($quote['quote_date'])); ?></td>
+                                <td style="color: #666;">
+                                    <?php if ($quote['expiry_date']): ?>
+                                        <?php echo date('M j, Y', strtotime($quote['expiry_date'])); ?>
+                                    <?php else: ?>
+                                        -
+                                    <?php endif; ?>
+                                </td>
+                                <td style="color: #666;">
+                                    $<?php echo number_format($quote['total_incl_gst'], 2); ?>
+                                </td>
+                                <td>
+                                    <span class="badge" style="background-color: <?php echo $statusInfo['color']; ?>; color: white; opacity: 0.7;">
+                                        <?php echo $statusInfo['label']; ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <a href="quoteBuilder.php?id=<?php echo $quote['id']; ?>" class="btn btn-sm btn-outline">View</a>
+                                        <a href="api/quotePdf.php?id=<?php echo $quote['id']; ?>" class="btn btn-sm btn-outline" target="_blank" title="Download PDF">PDF</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endfor; ?>
+                    <?php endif; ?>
                 <?php endforeach; ?>
             <?php endif; ?>
         </tbody>
@@ -360,7 +424,64 @@ $statuses = [
 .archived-row:hover {
     opacity: 0.8;
 }
+/* Revision toggle styles */
+.revision-toggle {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 2px 6px;
+    margin-right: 4px;
+    font-size: 10px;
+    color: #666;
+    vertical-align: middle;
+}
+.revision-toggle:hover {
+    color: #333;
+    background: #f0f0f0;
+    border-radius: 3px;
+}
+.revision-toggle .toggle-icon {
+    display: inline-block;
+    transition: transform 0.2s ease;
+}
+.revision-toggle.expanded .toggle-icon {
+    transform: rotate(90deg);
+}
+.revision-row {
+    background-color: #fafafa;
+}
+.revision-row:hover {
+    background-color: #f5f5f5;
+}
+.revision-row td {
+    border-top: 1px dashed #ddd;
+}
+.badge-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+.revision-count {
+    font-size: 10px;
+    margin-left: 5px;
+    opacity: 0.8;
+}
 </style>
+
+<script>
+function toggleRevisions(quoteNumber) {
+    const rows = document.querySelectorAll('tr.revision-row[data-parent="' + quoteNumber + '"]');
+    const mainRow = document.querySelector('tr.quote-main-row[data-quote-number="' + quoteNumber + '"]');
+    const toggleBtn = mainRow.querySelector('.revision-toggle');
+
+    const isExpanded = toggleBtn.classList.contains('expanded');
+
+    rows.forEach(function(row) {
+        row.style.display = isExpanded ? 'none' : 'table-row';
+    });
+
+    toggleBtn.classList.toggle('expanded');
+}
+</script>
 
 <!-- Email Quote Modal -->
 <div id="emailModal" class="modal" style="display: none;">

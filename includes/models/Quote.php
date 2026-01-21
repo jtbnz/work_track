@@ -64,7 +64,7 @@ class Quote {
             LEFT JOIN users u1 ON q.created_by = u1.id
             LEFT JOIN users u2 ON q.updated_by = u2.id
             WHERE $where
-            ORDER BY q.quote_date DESC, q.quote_number DESC
+            ORDER BY q.quote_number DESC, q.revision DESC
         ", $params);
     }
 
