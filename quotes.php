@@ -650,8 +650,19 @@ function openEmailModal(quoteId, quoteNumber, clientEmail, companyName) {
     var successDiv = document.getElementById('emailSuccess');
     var sendBtn = document.getElementById('sendEmailBtn');
 
-    if (!modal) {
-        alert('Error: Email modal not found. Please refresh the page.');
+    // Check all required elements exist
+    if (!modal || !quoteIdField || !toField || !subjectField || !messageField || !errorDiv || !successDiv || !sendBtn) {
+        console.error('Missing elements:', {
+            modal: !!modal,
+            quoteIdField: !!quoteIdField,
+            toField: !!toField,
+            subjectField: !!subjectField,
+            messageField: !!messageField,
+            errorDiv: !!errorDiv,
+            successDiv: !!successDiv,
+            sendBtn: !!sendBtn
+        });
+        alert('Error: Email modal elements not found. Please refresh the page.');
         return;
     }
 
@@ -659,7 +670,7 @@ function openEmailModal(quoteId, quoteNumber, clientEmail, companyName) {
     toField.value = clientEmail || '';
     subjectField.value = 'Quote ' + quoteNumber + ' from ' + companyName;
     messageField.value = '';
-    updateStatusField.checked = true;
+    if (updateStatusField) updateStatusField.checked = true;
     errorDiv.style.display = 'none';
     successDiv.style.display = 'none';
     sendBtn.disabled = false;
