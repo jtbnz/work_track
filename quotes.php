@@ -6,6 +6,11 @@ require_once 'includes/models/Client.php';
 
 $quoteModel = new Quote();
 $clientModel = new Client();
+$db = Database::getInstance();
+
+// Get company name for email subject
+$companyName = $db->fetchOne("SELECT setting_value FROM settings WHERE setting_key = 'company_name'");
+$companyName = $companyName ? $companyName['setting_value'] : 'Our Company';
 $message = '';
 $messageType = '';
 
@@ -184,7 +189,7 @@ $statuses = [
 
                                 <a href="api/quotePdf.php?id=<?php echo $quote['id']; ?>" class="btn btn-sm btn-secondary" target="_blank" title="Download PDF">PDF</a>
 
-                                <button type="button" class="btn btn-sm btn-info" onclick="openEmailModal(<?php echo $quote['id']; ?>, '<?php echo htmlspecialchars($quote['quote_number'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($quote['client_email'] ?? '', ENT_QUOTES); ?>')" title="Send Email">
+                                <button type="button" class="btn btn-sm btn-info" onclick="openEmailModal(<?php echo $quote['id']; ?>, '<?php echo htmlspecialchars($quote['quote_number'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($quote['client_email'] ?? '', ENT_QUOTES); ?>', '<?php echo htmlspecialchars($companyName, ENT_QUOTES); ?>')" title="Send Email">
                                     Email
                                 </button>
 
@@ -245,6 +250,18 @@ $statuses = [
 .btn-sm {
     padding: 4px 8px;
     font-size: 12px;
+    margin: 1px;
+    line-height: 1.5;
+    display: inline-block;
+    box-sizing: border-box;
+    vertical-align: middle;
+}
+.action-buttons form {
+    display: inline-block;
+    margin: 0;
+    padding: 0;
+}
+.action-buttons form .btn-sm {
     margin: 1px;
 }
 .badge {
@@ -309,7 +326,7 @@ $statuses = [
 
                 <div class="form-group">
                     <label>
-                        <input type="checkbox" id="updateStatus" name="update_status" checked>
+                        <input type="checkbox" id="emailUpdateStatus" name="update_status" checked>
                         Update quote status to "Sent" if currently "Draft"
                     </label>
                 </div>
@@ -437,12 +454,12 @@ textarea.form-control {
 </style>
 
 <script>
-function openEmailModal(quoteId, quoteNumber, clientEmail) {
+function openEmailModal(quoteId, quoteNumber, clientEmail, companyName) {
     document.getElementById('emailQuoteId').value = quoteId;
     document.getElementById('emailTo').value = clientEmail || '';
-    document.getElementById('emailSubject').value = '';
+    document.getElementById('emailSubject').value = 'Quote ' + quoteNumber + ' from ' + companyName;
     document.getElementById('emailMessage').value = '';
-    document.getElementById('updateStatus').checked = true;
+    document.getElementById('emailUpdateStatus').checked = true;
     document.getElementById('emailError').style.display = 'none';
     document.getElementById('emailSuccess').style.display = 'none';
     document.getElementById('sendEmailBtn').disabled = false;
@@ -451,13 +468,21 @@ function openEmailModal(quoteId, quoteNumber, clientEmail) {
 }
 
 function closeEmailModal() {
-    document.getElementById('emailModal').style.display = 'none';
+    const modal = document.getElementById('emailModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
 }
 
 async function sendQuoteEmail() {
     const btn = document.getElementById('sendEmailBtn');
     const errorDiv = document.getElementById('emailError');
     const successDiv = document.getElementById('emailSuccess');
+
+    if (!btn || !errorDiv || !successDiv) {
+        console.error('Required elements not found');
+        return;
+    }
 
     // Reset messages
     errorDiv.style.display = 'none';
@@ -486,7 +511,7 @@ async function sendQuoteEmail() {
                 to_email: toEmail,
                 subject: document.getElementById('emailSubject').value.trim(),
                 message: document.getElementById('emailMessage').value.trim(),
-                update_status: document.getElementById('updateStatus').checked
+                update_status: document.getElementById('emailUpdateStatus').checked
             })
         });
 
@@ -524,9 +549,14 @@ document.addEventListener('keydown', function(e) {
 });
 
 // Close modal when clicking outside
-document.getElementById('emailModal')?.addEventListener('click', function(e) {
-    if (e.target === this) {
-        closeEmailModal();
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('emailModal');
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeEmailModal();
+            }
+        });
     }
 });
 </script>
