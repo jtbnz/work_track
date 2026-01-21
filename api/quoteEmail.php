@@ -4,6 +4,9 @@
  * Sends a quote as PDF attachment to the client
  */
 
+// Start output buffering to capture any unexpected output
+ob_start();
+
 // Set JSON header early and disable HTML error display
 header('Content-Type: application/json');
 ini_set('display_errors', 0);
@@ -14,6 +17,20 @@ set_error_handler(function($severity, $message, $file, $line) {
     throw new ErrorException($message, 0, $severity, $file, $line);
 });
 
+// Shutdown handler to catch fatal errors
+register_shutdown_function(function() {
+    $error = error_get_last();
+    if ($error && in_array($error['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
+        ob_end_clean();
+        http_response_code(500);
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => false,
+            'message' => 'Fatal error: ' . $error['message'] . ' in ' . $error['file'] . ':' . $error['line']
+        ]);
+    }
+});
+
 try {
     require_once __DIR__ . '/../includes/auth.php';
     Auth::requireAuth();
@@ -22,6 +39,7 @@ try {
     require_once __DIR__ . '/../includes/models/Quote.php';
     require_once __DIR__ . '/../includes/db.php';
 } catch (Throwable $e) {
+    ob_end_clean();
     http_response_code(500);
     echo json_encode([
         'success' => false,
@@ -101,6 +119,9 @@ try {
 
     $success = $emailService->sendQuote($quoteId, $toEmail, $subject, $message, $updateStatus);
 
+    // Clean output buffer before sending JSON response
+    ob_end_clean();
+
     if ($success) {
         echo json_encode([
             'success' => true,
@@ -116,6 +137,7 @@ try {
 
 } catch (Throwable $e) {
     error_log("Quote email error: " . $e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine());
+    ob_end_clean();
     http_response_code(500);
     echo json_encode([
         'success' => false,
