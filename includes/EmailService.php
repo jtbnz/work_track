@@ -156,8 +156,8 @@ class EmailService
             }
 
             // Generate PDF
-            $quotePdf = new QuotePdf($quote);
-            $pdfContent = $quotePdf->Output('S'); // Return as string
+            $quotePdf = new QuotePdf();
+            $pdfContent = $quotePdf->generate($quote); // Return as string
 
             // Build default subject if not provided
             if (empty($subject)) {
