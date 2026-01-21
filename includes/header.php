@@ -26,7 +26,17 @@ Auth::requireAuth();
                 <li><a href="<?php echo BASE_PATH; ?>/gantt.php">Gantt</a></li>
                 <li><a href="<?php echo BASE_PATH; ?>/reports.php">Reports</a></li>
                 <li class="nav-dropdown">
-                    <a href="#">⚙️ Admin</a>
+                    <a href="#">Quoting</a>
+                    <ul class="dropdown-menu">
+                        <li><a href="<?php echo BASE_PATH; ?>/quotes.php">Quotes</a></li>
+                        <li><a href="<?php echo BASE_PATH; ?>/invoices.php">Invoices</a></li>
+                        <li><a href="<?php echo BASE_PATH; ?>/materials.php">Materials</a></li>
+                        <li><a href="<?php echo BASE_PATH; ?>/suppliers.php">Suppliers</a></li>
+                        <li><a href="<?php echo BASE_PATH; ?>/quotingSettings.php">Settings</a></li>
+                    </ul>
+                </li>
+                <li class="nav-dropdown">
+                    <a href="#">Admin</a>
                     <ul class="dropdown-menu">
                         <li><a href="<?php echo BASE_PATH; ?>/status.php">Statuses</a></li>
                         <li><a href="<?php echo BASE_PATH; ?>/templates.php">Templates</a></li>

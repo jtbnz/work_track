@@ -1,6 +1,73 @@
 <?php
 require_once dirname(__DIR__) . '/includes/db.php';
 
+/**
+ * Run database migrations from the migrations directory.
+ * Migrations are tracked in the migrations table to avoid re-running.
+ *
+ * @return bool True if all migrations succeeded, false otherwise
+ */
+function runMigrations() {
+    $db = Database::getInstance();
+    $conn = $db->getConnection();
+
+    // Create migrations tracking table if not exists
+    $conn->exec("
+        CREATE TABLE IF NOT EXISTS migrations (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            migration TEXT NOT NULL UNIQUE,
+            executed_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    ");
+
+    // Get list of executed migrations
+    $executed = $db->fetchAll("SELECT migration FROM migrations");
+    $executedList = array_column($executed, 'migration');
+
+    // Get migration files
+    $migrationPath = __DIR__ . '/migrations/';
+    if (!is_dir($migrationPath)) {
+        echo "No migrations directory found.\n";
+        return true;
+    }
+
+    $files = glob($migrationPath . '*.sql');
+    if (empty($files)) {
+        echo "No migration files found.\n";
+        return true;
+    }
+
+    sort($files); // Ensure migrations run in order
+
+    $migrationsRun = 0;
+    foreach ($files as $file) {
+        $migrationName = basename($file);
+        if (!in_array($migrationName, $executedList)) {
+            $sql = file_get_contents($file);
+            try {
+                // Execute migration (may contain multiple statements)
+                $conn->exec($sql);
+
+                // Record migration as executed
+                $db->insert('migrations', ['migration' => $migrationName]);
+                echo "  ✓ Executed: $migrationName\n";
+                $migrationsRun++;
+            } catch (PDOException $e) {
+                echo "  ✗ Error in $migrationName: " . $e->getMessage() . "\n";
+                return false;
+            }
+        }
+    }
+
+    if ($migrationsRun === 0) {
+        echo "All migrations already applied.\n";
+    } else {
+        echo "$migrationsRun migration(s) executed successfully.\n";
+    }
+
+    return true;
+}
+
 function initializeDatabase() {
     $dbPath = dirname(__DIR__) . '/database/work_track.db';
     $isNewDatabase = !file_exists($dbPath);
@@ -21,6 +88,13 @@ function initializeDatabase() {
         }
     } else {
         echo "Database already exists - checking for updates.\n";
+    }
+
+    // Run migrations
+    echo "\nRunning migrations...\n";
+    if (!runMigrations()) {
+        echo "Migration failed - stopping initialization.\n";
+        return;
     }
 
     // Check if admin user already exists

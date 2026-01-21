@@ -73,8 +73,23 @@ work_track_backup_*
 coverage/
 .phpunit.result.cache
 
-# Node (if added later)
+# Composer
+vendor/
+composer.phar
+composer
+
+# Node
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+package-lock.json
+
+# Playwright
+test-results/
+playwright-report/
+playwright/.cache/
+.playwright/
+
+source.xlsx
+quote.xlsx

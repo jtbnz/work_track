@@ -1,0 +1,7 @@
+Supplier,Manufacture,Item,Cost Excl,GST,Cost Inc,Sell,Comments,Stock on hand,Reorder Quantity,Unit Of Measure
+NiteCore,C2,Concept 2 Torch,202.28,30.342,232.622,340,Includes Battery,50,10,each
+NiteCore,DL10,Torch,94.61,14.1915,108.8015,160,No Battery,35,10,each
+NiteCore,LR50,Torch,44.15,6.6225,50.7725,75,No Battery,20,5,each
+NiteCore,HC33,Head Torch,68.08,10.212,78.292,115,No Battery,25,5,each
+Fabric Co,FAB-001,Cotton Fabric - White,25.00,3.75,28.75,45.00,Standard cotton,50,10,meter
+Hardware Plus,HW-001,Staples 10mm,8.50,1.28,9.78,15.00,Box of 5000,100,20,box

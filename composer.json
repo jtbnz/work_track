@@ -1,0 +1,14 @@
+{
+    "name": "worktrack/app",
+    "description": "WorkTrack Project Management",
+    "require": {
+        "tecnickcom/tcpdf": "^6",
+        "phpmailer/phpmailer": "^7.0"
+    },
+    "authors": [
+        {
+            "name": "Jon",
+            "email": "57672422+jtbnz@users.noreply.github.com"
+        }
+    ]
+}
