@@ -115,8 +115,25 @@ try {
     $emailService = new EmailService();
     $debug['checks']['email_service_instance'] = 'OK';
     $debug['checks']['email_configured'] = $emailService->isConfigured() ? 'Yes' : 'No';
+
+    // Test SMTP connection
+    $testResult = $emailService->testConnection();
+    $debug['checks']['smtp_connection'] = $testResult['success'] ? 'OK' : 'FAILED: ' . $testResult['message'];
 } catch (Throwable $e) {
     $debug['checks']['email_service_instance'] = 'ERROR: ' . $e->getMessage();
+}
+
+// If quote_id is provided, try to actually send to a test email
+if (isset($_GET['test_send']) && isset($_GET['quote_id']) && isset($_GET['email'])) {
+    $quoteId = (int)$_GET['quote_id'];
+    $testEmail = $_GET['email'];
+
+    try {
+        $result = $emailService->sendQuote($quoteId, $testEmail, 'Test Quote Email', '', false);
+        $debug['checks']['test_send'] = $result ? 'OK - Email sent!' : 'FAILED: ' . $emailService->getLastError();
+    } catch (Throwable $e) {
+        $debug['checks']['test_send'] = 'ERROR: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine();
+    }
 }
 
 echo json_encode($debug, JSON_PRETTY_PRINT);
