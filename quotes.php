@@ -1,20 +1,42 @@
 <?php
-$pageTitle = 'Quotes';
-require_once 'includes/header.php';
 require_once 'includes/models/Quote.php';
 require_once 'includes/models/Client.php';
+require_once 'includes/db.php';
 
 $quoteModel = new Quote();
+$message = '';
+$messageType = '';
+
+// Handle POST actions that may redirect BEFORE including header
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $action = $_POST['action'] ?? '';
+
+    if ($action === 'createRevision') {
+        $id = $_POST['id'];
+        $result = $quoteModel->createRevision($id);
+
+        if ($result['success']) {
+            header('Location: quoteBuilder.php?id=' . $result['id']);
+            exit;
+        } else {
+            $message = $result['message'] ?? 'Failed to create revision.';
+            $messageType = 'danger';
+        }
+    }
+}
+
+// Now include header (outputs HTML)
+$pageTitle = 'Quotes';
+require_once 'includes/header.php';
+
 $clientModel = new Client();
 $db = Database::getInstance();
 
 // Get company name for email subject
 $companyName = $db->fetchOne("SELECT setting_value FROM settings WHERE setting_key = 'company_name'");
 $companyName = $companyName ? $companyName['setting_value'] : 'Our Company';
-$message = '';
-$messageType = '';
 
-// Handle POST actions
+// Handle remaining POST actions (no redirects needed)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
 
@@ -39,17 +61,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $messageType = 'success';
         } else {
             $message = $result['message'] ?? 'Failed to update status.';
-            $messageType = 'danger';
-        }
-    } elseif ($action === 'createRevision') {
-        $id = $_POST['id'];
-        $result = $quoteModel->createRevision($id);
-
-        if ($result['success']) {
-            header('Location: quoteBuilder.php?id=' . $result['id']);
-            exit;
-        } else {
-            $message = $result['message'] ?? 'Failed to create revision.';
             $messageType = 'danger';
         }
     } elseif ($action === 'archive') {
