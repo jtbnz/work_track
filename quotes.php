@@ -52,6 +52,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $message = $result['message'] ?? 'Failed to create revision.';
             $messageType = 'danger';
         }
+    } elseif ($action === 'archive') {
+        $id = $_POST['id'];
+        $result = $quoteModel->archive($id);
+
+        if ($result['success']) {
+            $message = 'Quote archived successfully!';
+            $messageType = 'success';
+        } else {
+            $message = $result['message'] ?? 'Failed to archive quote.';
+            $messageType = 'danger';
+        }
+    } elseif ($action === 'unarchive') {
+        $id = $_POST['id'];
+        $result = $quoteModel->unarchive($id);
+
+        if ($result['success']) {
+            $message = 'Quote restored successfully!';
+            $messageType = 'success';
+        } else {
+            $message = $result['message'] ?? 'Failed to restore quote.';
+            $messageType = 'danger';
+        }
     }
 }
 
@@ -66,6 +88,10 @@ if (!empty($_GET['status'])) {
 if (!empty($_GET['search'])) {
     $filters['search'] = $_GET['search'];
 }
+if (!empty($_GET['show_archived'])) {
+    $filters['include_archived'] = true;
+}
+$showArchived = !empty($_GET['show_archived']);
 
 // Get quotes
 $quotes = $quoteModel->getAll($filters);
@@ -80,7 +106,8 @@ $statuses = [
     'accepted' => ['label' => 'Accepted', 'color' => '#28a745'],
     'declined' => ['label' => 'Declined', 'color' => '#dc3545'],
     'expired' => ['label' => 'Expired', 'color' => '#fd7e14'],
-    'invoiced' => ['label' => 'Invoiced', 'color' => '#17a2b8']
+    'invoiced' => ['label' => 'Invoiced', 'color' => '#17a2b8'],
+    'archived' => ['label' => 'Archived', 'color' => '#adb5bd']
 ];
 ?>
 
@@ -105,8 +132,12 @@ $statuses = [
                     </option>
                 <?php endforeach; ?>
             </select>
+            <label style="display: inline-flex; align-items: center; margin-left: 10px; font-weight: normal; cursor: pointer;">
+                <input type="checkbox" name="show_archived" value="1" <?php echo $showArchived ? 'checked' : ''; ?> style="margin-right: 5px;">
+                Show Archived
+            </label>
             <button type="submit" class="btn btn-secondary">Filter</button>
-            <?php if (!empty($filters)): ?>
+            <?php if (!empty($filters) || $showArchived): ?>
                 <a href="quotes.php" class="btn btn-outline">Clear</a>
             <?php endif; ?>
         </form>
@@ -145,8 +176,9 @@ $statuses = [
                     <?php
                     $statusInfo = $statuses[$quote['status']] ?? ['label' => $quote['status'], 'color' => '#6c757d'];
                     $isExpired = $quote['status'] === 'sent' && $quote['expiry_date'] && strtotime($quote['expiry_date']) < time();
+                    $isArchived = $quote['status'] === 'archived';
                     ?>
-                    <tr>
+                    <tr class="<?php echo $isArchived ? 'archived-row' : ''; ?>">
                         <td>
                             <strong><?php echo htmlspecialchars($quote['quote_number']); ?></strong>
                             <?php if ($quote['revision'] > 1): ?>
@@ -237,6 +269,20 @@ $statuses = [
                                         <button type="submit" class="btn btn-sm btn-danger">Delete</button>
                                     </form>
                                 <?php endif; ?>
+
+                                <?php if ($quote['status'] === 'archived'): ?>
+                                    <form method="POST" style="display: inline-block;">
+                                        <input type="hidden" name="action" value="unarchive">
+                                        <input type="hidden" name="id" value="<?php echo $quote['id']; ?>">
+                                        <button type="submit" class="btn btn-sm btn-outline" title="Restore from archive">Restore</button>
+                                    </form>
+                                <?php elseif (!in_array($quote['status'], ['draft'])): ?>
+                                    <form method="POST" style="display: inline-block;">
+                                        <input type="hidden" name="action" value="archive">
+                                        <input type="hidden" name="id" value="<?php echo $quote['id']; ?>">
+                                        <button type="submit" class="btn btn-sm btn-outline" title="Archive quote">Archive</button>
+                                    </form>
+                                <?php endif; ?>
                             </div>
                         </td>
                     </tr>
@@ -295,6 +341,13 @@ $statuses = [
     display: flex;
     flex-wrap: wrap;
     gap: 2px;
+}
+.archived-row {
+    opacity: 0.6;
+    background-color: #f8f9fa;
+}
+.archived-row:hover {
+    opacity: 0.8;
 }
 </style>
 

@@ -29,6 +29,9 @@ class Quote {
         if (!empty($filters['status'])) {
             $whereConditions[] = "q.status = :status";
             $params['status'] = $filters['status'];
+        } elseif (empty($filters['include_archived'])) {
+            // By default, exclude archived quotes unless explicitly requested
+            $whereConditions[] = "q.status != 'archived'";
         }
 
         if (!empty($filters['date_from'])) {
@@ -530,13 +533,71 @@ class Quote {
      * Update quote status
      */
     public function updateStatus($id, $status) {
-        $validStatuses = ['draft', 'sent', 'accepted', 'declined', 'expired', 'invoiced'];
+        $validStatuses = ['draft', 'sent', 'accepted', 'declined', 'expired', 'invoiced', 'archived'];
 
         if (!in_array($status, $validStatuses)) {
             return ['success' => false, 'message' => 'Invalid status'];
         }
 
         $result = $this->update($id, ['status' => $status]);
+
+        return ['success' => (bool)$result];
+    }
+
+    /**
+     * Archive a quote
+     */
+    public function archive($id) {
+        $quote = $this->getById($id);
+        if (!$quote) {
+            return ['success' => false, 'message' => 'Quote not found'];
+        }
+
+        // Store original status before archiving
+        $result = $this->db->update('quotes', [
+            'status' => 'archived',
+            'previous_status' => $quote['status'],
+            'updated_at' => date('Y-m-d H:i:s'),
+            'updated_by' => Auth::getCurrentUserId()
+        ], 'id = :id', ['id' => $id]);
+
+        if ($result) {
+            Auth::logAudit('quotes', $id, 'UPDATE', [
+                'status' => ['old' => $quote['status'], 'new' => 'archived']
+            ]);
+        }
+
+        return ['success' => (bool)$result];
+    }
+
+    /**
+     * Unarchive a quote (restore to previous status)
+     */
+    public function unarchive($id) {
+        $quote = $this->db->fetchOne("SELECT * FROM quotes WHERE id = :id", ['id' => $id]);
+        if (!$quote) {
+            return ['success' => false, 'message' => 'Quote not found'];
+        }
+
+        if ($quote['status'] !== 'archived') {
+            return ['success' => false, 'message' => 'Quote is not archived'];
+        }
+
+        // Restore to previous status, or 'draft' if none stored
+        $restoreStatus = $quote['previous_status'] ?? 'draft';
+
+        $result = $this->db->update('quotes', [
+            'status' => $restoreStatus,
+            'previous_status' => null,
+            'updated_at' => date('Y-m-d H:i:s'),
+            'updated_by' => Auth::getCurrentUserId()
+        ], 'id = :id', ['id' => $id]);
+
+        if ($result) {
+            Auth::logAudit('quotes', $id, 'UPDATE', [
+                'status' => ['old' => 'archived', 'new' => $restoreStatus]
+            ]);
+        }
 
         return ['success' => (bool)$result];
     }

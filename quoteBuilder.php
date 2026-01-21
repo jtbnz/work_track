@@ -170,6 +170,10 @@ $standardRate = $standardRate ? (float)$standardRate['setting_value'] : 75;
 $premiumRate = $premiumRate ? (float)$premiumRate['setting_value'] : 95;
 $gstRate = $db->fetchOne("SELECT setting_value FROM settings WHERE setting_key = 'gst_rate'");
 $gstRate = $gstRate ? (float)$gstRate['setting_value'] : 15;
+
+// Get company name for email subject
+$companyNameRow = $db->fetchOne("SELECT setting_value FROM settings WHERE setting_key = 'company_name'");
+$companyName = $companyNameRow ? $companyNameRow['setting_value'] : 'Our Company';
 ?>
 
 <div class="page-header">
@@ -188,6 +192,7 @@ $gstRate = $gstRate ? (float)$gstRate['setting_value'] : 15;
         <a href="quotes.php" class="btn btn-secondary">Back to Quotes</a>
         <?php if (!$isNew): ?>
             <a href="api/quotePdf.php?id=<?php echo $quote['id']; ?>" class="btn btn-info" target="_blank">Download PDF</a>
+            <button type="button" class="btn btn-info" onclick="openEmailModal()">Email Quote</button>
         <?php endif; ?>
         <?php if (!$isNew && $isEditable): ?>
             <button type="submit" form="quoteForm" name="action" value="save" class="btn btn-primary">Save</button>
@@ -545,6 +550,48 @@ $gstRate = $gstRate ? (float)$gstRate['setting_value'] : 15;
         </div>
     </div>
 </div>
+
+<?php if (!$isNew): ?>
+<!-- Email Quote Modal -->
+<div id="emailModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Send Quote via Email</h3>
+            <button type="button" class="modal-close" onclick="closeEmailModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label for="emailTo">Recipient Email *</label>
+                <input type="email" id="emailTo" class="form-control" required placeholder="client@example.com" value="<?php echo htmlspecialchars($quote['client_email'] ?? ''); ?>">
+            </div>
+
+            <div class="form-group">
+                <label for="emailSubject">Subject</label>
+                <input type="text" id="emailSubject" class="form-control" value="Quote <?php echo htmlspecialchars($quote['quote_number']); ?> from <?php echo htmlspecialchars($companyName); ?>">
+            </div>
+
+            <div class="form-group">
+                <label for="emailMessage">Custom Message (optional)</label>
+                <textarea id="emailMessage" class="form-control" rows="5" placeholder="Leave blank to use default email template"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="emailUpdateStatus" checked>
+                    Update quote status to "Sent" if currently "Draft"
+                </label>
+            </div>
+
+            <div id="emailError" class="alert alert-danger" style="display: none;"></div>
+            <div id="emailSuccess" class="alert alert-success" style="display: none;"></div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeEmailModal()">Cancel</button>
+            <button type="button" class="btn btn-primary" id="sendEmailBtn" onclick="sendQuoteEmail()">Send Email</button>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
 
 <style>
 .quote-builder {
@@ -939,6 +986,24 @@ $gstRate = $gstRate ? (float)$gstRate['setting_value'] : 15;
     gap: 10px;
     padding: 15px 20px;
     border-top: 1px solid #e9ecef;
+}
+
+.alert {
+    padding: 10px 15px;
+    border-radius: 4px;
+    margin-top: 15px;
+}
+
+.alert-danger {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.alert-success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
 }
 </style>
 
@@ -1359,6 +1424,116 @@ document.addEventListener('DOMContentLoaded', function() {
         return div.innerHTML;
     }
 });
+
+<?php if (!$isNew): ?>
+// Email Modal Functions
+function openEmailModal() {
+    var modal = document.getElementById('emailModal');
+    var errorDiv = document.getElementById('emailError');
+    var successDiv = document.getElementById('emailSuccess');
+    var sendBtn = document.getElementById('sendEmailBtn');
+
+    if (modal) {
+        errorDiv.style.display = 'none';
+        successDiv.style.display = 'none';
+        sendBtn.disabled = false;
+        sendBtn.textContent = 'Send Email';
+        modal.style.display = 'flex';
+    }
+}
+
+function closeEmailModal() {
+    var modal = document.getElementById('emailModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+async function sendQuoteEmail() {
+    var sendBtn = document.getElementById('sendEmailBtn');
+    var errorDiv = document.getElementById('emailError');
+    var successDiv = document.getElementById('emailSuccess');
+    var toField = document.getElementById('emailTo');
+    var subjectField = document.getElementById('emailSubject');
+    var messageField = document.getElementById('emailMessage');
+    var updateStatusField = document.getElementById('emailUpdateStatus');
+
+    // Reset messages
+    errorDiv.style.display = 'none';
+    successDiv.style.display = 'none';
+
+    // Validate email
+    var toEmail = toField.value.trim();
+    if (!toEmail) {
+        errorDiv.textContent = 'Please enter a recipient email address';
+        errorDiv.style.display = 'block';
+        return;
+    }
+
+    // Disable button and show loading
+    sendBtn.disabled = true;
+    sendBtn.textContent = 'Sending...';
+
+    try {
+        var response = await fetch('<?php echo BASE_PATH; ?>/api/quoteEmail.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                quote_id: <?php echo $quote['id']; ?>,
+                to_email: toEmail,
+                subject: subjectField.value.trim(),
+                message: messageField.value.trim(),
+                update_status: updateStatusField.checked
+            })
+        });
+
+        var data = await response.json();
+
+        if (data.success) {
+            successDiv.textContent = data.message;
+            successDiv.style.display = 'block';
+            sendBtn.textContent = 'Sent!';
+
+            // Close modal and refresh page after delay
+            setTimeout(function() {
+                closeEmailModal();
+                window.location.reload();
+            }, 1500);
+        } else {
+            errorDiv.textContent = data.message || 'Failed to send email';
+            errorDiv.style.display = 'block';
+            sendBtn.disabled = false;
+            sendBtn.textContent = 'Send Email';
+        }
+    } catch (error) {
+        console.error('Email send error:', error);
+        errorDiv.textContent = 'An error occurred while sending the email';
+        errorDiv.style.display = 'block';
+        sendBtn.disabled = false;
+        sendBtn.textContent = 'Send Email';
+    }
+}
+
+// Close email modal on escape key and background click
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeEmailModal();
+    }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    var emailModal = document.getElementById('emailModal');
+    if (emailModal) {
+        emailModal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeEmailModal();
+            }
+        });
+    }
+});
+<?php endif; ?>
 </script>
 
 <?php
