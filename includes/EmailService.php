@@ -121,7 +121,8 @@ class EmailService
     {
         try {
             // Get quote data
-            $quote = Quote::getById($quoteId);
+            $quoteModel = new Quote();
+            $quote = $quoteModel->getById($quoteId);
             if (!$quote) {
                 $this->lastError = 'Quote not found';
                 return false;
@@ -188,7 +189,7 @@ class EmailService
 
             // Update quote status to 'sent' if requested and currently draft
             if ($updateStatus && $quote['status'] === 'draft') {
-                Quote::updateStatus($quoteId, 'sent');
+                $quoteModel->updateStatus($quoteId, 'sent');
             }
 
             // Log the email send

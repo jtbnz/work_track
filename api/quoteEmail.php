@@ -36,7 +36,8 @@ if (!$quoteId) {
 
 try {
     // Get quote to validate it exists
-    $quote = Quote::getById($quoteId);
+    $quoteModel = new Quote();
+    $quote = $quoteModel->getById($quoteId);
     if (!$quote) {
         http_response_code(404);
         echo json_encode(['success' => false, 'message' => 'Quote not found']);
