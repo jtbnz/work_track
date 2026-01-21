@@ -55,10 +55,10 @@ class EmailService
     private function getSetting(string $key, string $default = ''): string
     {
         $result = $this->db->fetchOne(
-            "SELECT value FROM settings WHERE key = ?",
+            "SELECT setting_value FROM settings WHERE setting_key = ?",
             [$key]
         );
-        return $result ? $result['value'] : $default;
+        return $result ? $result['setting_value'] : $default;
     }
 
     /**
