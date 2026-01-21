@@ -262,13 +262,12 @@ class EmailService
                 'table_name' => $type === 'quote' ? 'quotes' : 'invoices',
                 'record_id' => $documentId,
                 'action' => 'email_sent',
-                'changes' => json_encode([
+                'changes_json' => json_encode([
                     'to' => $toEmail,
                     'subject' => $subject,
                     'sent_at' => date('Y-m-d H:i:s')
                 ]),
-                'user_id' => $_SESSION['user_id'] ?? null,
-                'created_at' => date('Y-m-d H:i:s')
+                'user_id' => $_SESSION['user_id'] ?? null
             ]);
         } catch (Exception $e) {
             // Log error but don't fail the email send
