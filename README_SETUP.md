@@ -4,10 +4,11 @@
 
 1. **Install PHP dependencies (required for PDF and Email features):**
    ```bash
-   # If you don't have Composer installed globally, download it first:
-   curl -sS https://getcomposer.org/installer | php
+   # If Composer is installed globally:
+   composer install
 
-   # Install dependencies
+   # Or if you need to download Composer first:
+   curl -sS https://getcomposer.org/installer | php
    php composer.phar install
    ```
 
@@ -34,7 +35,7 @@ WorkTrack supports in-place upgrades. Your data is preserved when updating.
 git pull
 
 # Install any new dependencies
-php composer.phar install
+composer install
 ```
 
 The database schema will be automatically updated when you access the application. Migrations are tracked to avoid re-running.
@@ -158,10 +159,11 @@ The quoting module includes PDF generation and email delivery. These features re
 ### Installing Dependencies
 
 ```bash
-# Download Composer if not already installed
-curl -sS https://getcomposer.org/installer | php
-
 # Install all dependencies (TCPDF for PDFs, PHPMailer for emails)
+composer install
+
+# Or if Composer isn't installed globally:
+curl -sS https://getcomposer.org/installer | php
 php composer.phar install
 ```
 
