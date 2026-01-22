@@ -92,6 +92,7 @@ class Quote {
         if ($quote) {
             $quote['materials'] = $this->getMaterials($id);
             $quote['misc_items'] = $this->getMiscItems($id);
+            $quote['foam_items'] = $this->getFoamItems($id);
         }
 
         return $quote;
@@ -307,6 +308,25 @@ class Quote {
                 ]);
             }
 
+            // Copy foam items
+            if (!empty($original['foam_items'])) {
+                foreach ($original['foam_items'] as $foam) {
+                    $this->db->insert('quote_foam', [
+                        'quote_id' => $newId,
+                        'foam_product_id' => $foam['foam_product_id'],
+                        'grade_code' => $foam['grade_code'],
+                        'thickness' => $foam['thickness'],
+                        'sheet_cost' => $foam['sheet_cost'],
+                        'sheet_area' => $foam['sheet_area'],
+                        'square_meters' => $foam['square_meters'],
+                        'cutting_required' => $foam['cutting_required'],
+                        'unit_cost' => $foam['unit_cost'],
+                        'line_total' => $foam['line_total'],
+                        'sort_order' => $foam['sort_order']
+                    ]);
+                }
+            }
+
             // Calculate totals
             $this->calculateTotals($newId);
 
@@ -484,6 +504,13 @@ class Quote {
             return false;
         }
 
+        // Calculate foam total
+        $foamResult = $this->db->fetchOne(
+            "SELECT COALESCE(SUM(line_total), 0) as total FROM quote_foam WHERE quote_id = :id",
+            ['id' => $quoteId]
+        );
+        $subtotalFoam = (float)$foamResult['total'];
+
         // Calculate materials total
         $materialsResult = $this->db->fetchOne(
             "SELECT COALESCE(SUM(line_total), 0) as total FROM quote_materials WHERE quote_id = :id",
@@ -511,14 +538,15 @@ class Quote {
         $labourRate = (float)$quote['labour_rate'];
         $subtotalLabour = round($totalHours * $labourRate, 2);
 
-        // Calculate totals
-        $totalExclGst = $subtotalMaterials + $subtotalMisc + $subtotalLabour;
+        // Calculate totals (now includes foam)
+        $totalExclGst = $subtotalFoam + $subtotalMaterials + $subtotalMisc + $subtotalLabour;
         $gstRate = (float)$this->getSetting('gst_rate', 15);
         $gstAmount = round($totalExclGst * ($gstRate / 100), 2);
         $totalInclGst = $totalExclGst + $gstAmount;
 
         // Update quote
         return $this->db->update('quotes', [
+            'subtotal_foam' => $subtotalFoam,
             'subtotal_materials' => $subtotalMaterials,
             'subtotal_misc' => $subtotalMisc,
             'subtotal_labour' => $subtotalLabour,
@@ -668,5 +696,178 @@ class Quote {
             FROM quotes
             GROUP BY status
         ");
+    }
+
+    // =====================================
+    // FOAM CALCULATOR METHODS
+    // =====================================
+
+    /**
+     * Get foam items for a quote
+     */
+    public function getFoamItems($quoteId) {
+        return $this->db->fetchAll("
+            SELECT qf.*,
+                   fp.id as product_id,
+                   fg.grade_code as current_grade_code,
+                   fg.description as grade_description
+            FROM quote_foam qf
+            LEFT JOIN foam_products fp ON qf.foam_product_id = fp.id
+            LEFT JOIN foam_grades fg ON fp.grade_id = fg.id
+            WHERE qf.quote_id = :quote_id
+            ORDER BY qf.sort_order ASC
+        ", ['quote_id' => $quoteId]);
+    }
+
+    /**
+     * Add a foam item to a quote
+     */
+    public function addFoam($quoteId, $data) {
+        // If foam_product_id is provided but other details are missing, look them up
+        if (!empty($data['foam_product_id']) && (empty($data['sheet_cost']) || empty($data['grade_code']))) {
+            $product = $this->db->fetchOne("
+                SELECT fp.*, fg.grade_code
+                FROM foam_products fp
+                JOIN foam_grades fg ON fp.grade_id = fg.id
+                WHERE fp.id = :id
+            ", ['id' => $data['foam_product_id']]);
+
+            if ($product) {
+                $data['sheet_cost'] = $data['sheet_cost'] ?? $product['sheet_cost'];
+                $data['sheet_area'] = $data['sheet_area'] ?? $product['sheet_area'];
+                $data['grade_code'] = $data['grade_code'] ?? $product['grade_code'];
+                $data['thickness'] = $data['thickness'] ?? $product['thickness'];
+            }
+        }
+
+        // Get current max sort order
+        $maxOrder = $this->db->fetchOne(
+            "SELECT MAX(sort_order) as max_order FROM quote_foam WHERE quote_id = :quote_id",
+            ['quote_id' => $quoteId]
+        );
+        $sortOrder = ($maxOrder['max_order'] ?? 0) + 1;
+
+        // Calculate costs using the formula
+        $calculation = $this->calculateFoamCost(
+            $data['sheet_cost'] ?? 0,
+            $data['sheet_area'] ?? 3.91,
+            $data['square_meters'],
+            $data['cutting_required'] ?? false
+        );
+
+        $id = $this->db->insert('quote_foam', [
+            'quote_id' => $quoteId,
+            'foam_product_id' => $data['foam_product_id'] ?? null,
+            'grade_code' => $data['grade_code'] ?? '',
+            'thickness' => $data['thickness'] ?? '',
+            'sheet_cost' => $data['sheet_cost'] ?? 0,
+            'sheet_area' => $data['sheet_area'] ?? 3.91,
+            'square_meters' => $data['square_meters'],
+            'cutting_required' => ($data['cutting_required'] ?? 0) ? 1 : 0,
+            'unit_cost' => $calculation['unit_cost'],
+            'line_total' => $calculation['line_total'],
+            'sort_order' => $sortOrder
+        ]);
+
+        if ($id) {
+            $this->calculateTotals($quoteId);
+        }
+
+        return $id;
+    }
+
+    /**
+     * Update a foam line item
+     */
+    public function updateFoam($foamId, $data) {
+        // Recalculate if needed
+        if (isset($data['square_meters']) || isset($data['cutting_required'])) {
+            $foam = $this->db->fetchOne("SELECT * FROM quote_foam WHERE id = :id", ['id' => $foamId]);
+            if ($foam) {
+                $calculation = $this->calculateFoamCost(
+                    $data['sheet_cost'] ?? $foam['sheet_cost'],
+                    $data['sheet_area'] ?? $foam['sheet_area'],
+                    $data['square_meters'] ?? $foam['square_meters'],
+                    $data['cutting_required'] ?? $foam['cutting_required']
+                );
+                $data['unit_cost'] = $calculation['unit_cost'];
+                $data['line_total'] = $calculation['line_total'];
+            }
+        }
+
+        $result = $this->db->update('quote_foam', $data, 'id = :id', ['id' => $foamId]);
+
+        if ($result) {
+            $foam = $this->db->fetchOne("SELECT quote_id FROM quote_foam WHERE id = :id", ['id' => $foamId]);
+            if ($foam) {
+                $this->calculateTotals($foam['quote_id']);
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Remove a foam item from a quote
+     */
+    public function removeFoam($foamId) {
+        $foam = $this->db->fetchOne("SELECT quote_id FROM quote_foam WHERE id = :id", ['id' => $foamId]);
+
+        $result = $this->db->delete('quote_foam', 'id = :id', ['id' => $foamId]);
+
+        if ($result && $foam) {
+            $this->calculateTotals($foam['quote_id']);
+        }
+
+        return $result;
+    }
+
+    /**
+     * Clear all foam items from a quote
+     */
+    public function clearFoam($quoteId) {
+        return $this->db->delete('quote_foam', 'quote_id = :quote_id', ['quote_id' => $quoteId]);
+    }
+
+    /**
+     * Calculate foam cost based on formula:
+     * (cost_per_sqm × quantity × markup) × (1 + cutting_fee)
+     */
+    public function calculateFoamCost($sheetCost, $sheetArea, $squareMeters, $cuttingRequired = false) {
+        // Get settings
+        $markup = (float)$this->getSetting('foam_markup_multiplier', 2);
+        $cuttingFee = (float)$this->getSetting('foam_cutting_fee_percent', 15);
+
+        // Cost per square meter (base cost)
+        $costPerSqM = $sheetArea > 0 ? $sheetCost / $sheetArea : 0;
+
+        // Apply markup to get unit cost (cost per m² after markup)
+        $unitCost = $costPerSqM * $markup;
+
+        // Calculate line total (before cutting fee)
+        $lineTotal = $unitCost * $squareMeters;
+
+        // Apply cutting fee if required
+        if ($cuttingRequired) {
+            $lineTotal *= (1 + $cuttingFee / 100);
+        }
+
+        return [
+            'unit_cost' => round($unitCost, 2),
+            'line_total' => round($lineTotal, 2),
+            'markup' => $markup,
+            'cutting_fee_percent' => $cuttingFee
+        ];
+    }
+
+    /**
+     * Get foam subtotal for a quote
+     */
+    public function getFoamTotal($quoteId) {
+        $result = $this->db->fetchOne(
+            "SELECT COALESCE(SUM(line_total), 0) as total FROM quote_foam WHERE quote_id = :id",
+            ['id' => $quoteId]
+        );
+        return (float)$result['total'];
     }
 }

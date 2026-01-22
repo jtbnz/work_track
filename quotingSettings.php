@@ -24,6 +24,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'gst_rate' => (float)($_POST['gst_rate'] ?? 15),
             'quote_validity_days' => (int)($_POST['quote_validity_days'] ?? 30),
             'invoice_payment_terms' => $_POST['invoice_payment_terms'] ?? 'Net 14',
+            // Foam settings
+            'foam_default_sheet_area' => (float)($_POST['foam_default_sheet_area'] ?? 3.91),
+            'foam_markup_multiplier' => (float)($_POST['foam_markup_multiplier'] ?? 2),
+            'foam_cutting_fee_percent' => (float)($_POST['foam_cutting_fee_percent'] ?? 15),
             'quote_terms' => $_POST['quote_terms'] ?? '',
             'quote_footer_text' => $_POST['quote_footer_text'] ?? '',
             // SMTP settings
@@ -138,6 +142,11 @@ $quoteValidityDays = getSetting($db, 'quote_validity_days', '30');
 $invoicePaymentTerms = getSetting($db, 'invoice_payment_terms', 'Net 14');
 $quoteTerms = getSetting($db, 'quote_terms', "1. This quote is valid for 30 days from the date of issue.\n2. A 50% deposit is required to commence work.\n3. Final payment is due upon completion.\n4. Prices are inclusive of GST where shown.\n5. Any variations to the quoted scope may result in price adjustments.");
 $quoteFooterText = getSetting($db, 'quote_footer_text', '');
+
+// Foam settings
+$foamDefaultSheetArea = getSetting($db, 'foam_default_sheet_area', '3.91');
+$foamMarkupMultiplier = getSetting($db, 'foam_markup_multiplier', '2');
+$foamCuttingFeePercent = getSetting($db, 'foam_cutting_fee_percent', '15');
 
 // SMTP settings
 $smtpHost = getSetting($db, 'smtp_host', '');
@@ -273,6 +282,37 @@ $smtpConfigured = !empty($smtpHost) && !empty($smtpFromEmail);
                     <option value="Net 30" <?php echo $invoicePaymentTerms === 'Net 30' ? 'selected' : ''; ?>>Net 30</option>
                     <option value="Net 60" <?php echo $invoicePaymentTerms === 'Net 60' ? 'selected' : ''; ?>>Net 60</option>
                 </select>
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <h3>Foam Pricing</h3>
+            <p class="section-description">Settings for foam cost calculations in the quote builder</p>
+
+            <div class="form-row">
+                <div class="form-group col-md-4">
+                    <label for="foam_default_sheet_area">Default Sheet Area (m²)</label>
+                    <input type="number" id="foam_default_sheet_area" name="foam_default_sheet_area" class="form-control"
+                        value="<?php echo htmlspecialchars($foamDefaultSheetArea); ?>" min="0.01" step="0.01">
+                    <small class="form-text">Standard sheet size for cost calculations (typically 3.91 m²)</small>
+                </div>
+                <div class="form-group col-md-4">
+                    <label for="foam_markup_multiplier">Markup Multiplier</label>
+                    <input type="number" id="foam_markup_multiplier" name="foam_markup_multiplier" class="form-control"
+                        value="<?php echo htmlspecialchars($foamMarkupMultiplier); ?>" min="1" step="0.1">
+                    <small class="form-text">Multiply cost per m² by this value (e.g., 2 = 100% markup)</small>
+                </div>
+                <div class="form-group col-md-4">
+                    <label for="foam_cutting_fee_percent">Cutting Fee (%)</label>
+                    <input type="number" id="foam_cutting_fee_percent" name="foam_cutting_fee_percent" class="form-control"
+                        value="<?php echo htmlspecialchars($foamCuttingFeePercent); ?>" min="0" max="100" step="0.1">
+                    <small class="form-text">Additional fee when cutting is required</small>
+                </div>
+            </div>
+
+            <div class="foam-formula-preview">
+                <strong>Formula Preview:</strong>
+                <code>Sell Price = (Sheet Cost ÷ <?php echo $foamDefaultSheetArea; ?>) × <?php echo $foamMarkupMultiplier; ?> × Sq Meters × (1 + <?php echo $foamCuttingFeePercent; ?>% if cutting)</code>
             </div>
         </div>
 
@@ -503,6 +543,24 @@ textarea.form-control {
     margin-top: 20px;
     padding-top: 15px;
     border-top: 1px solid #eee;
+}
+
+.foam-formula-preview {
+    margin-top: 15px;
+    padding: 12px 15px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    font-size: 13px;
+}
+
+.foam-formula-preview code {
+    display: inline-block;
+    margin-left: 10px;
+    padding: 4px 8px;
+    background: #e9ecef;
+    border-radius: 3px;
+    font-family: monospace;
+    color: #495057;
 }
 
 .alert {
