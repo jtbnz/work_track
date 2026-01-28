@@ -92,7 +92,7 @@ class QuotePdf extends TCPDF {
         if ($this->companyWebsite || $this->companyAbn) {
             $extraLine = [];
             if ($this->companyWebsite) $extraLine[] = $this->companyWebsite;
-            if ($this->companyAbn) $extraLine[] = 'ABN: ' . $this->companyAbn;
+            if ($this->companyAbn) $extraLine[] = 'GST: ' . $this->companyAbn;
             $this->Cell(0, 3.5, implode('  |  ', $extraLine), 0, 1, 'R');
         }
 

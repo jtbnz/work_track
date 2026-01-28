@@ -216,7 +216,7 @@ $smtpConfigured = !empty($smtpHost) && !empty($smtpFromEmail);
                         value="<?php echo htmlspecialchars($companyName); ?>" placeholder="Your Company Name">
                 </div>
                 <div class="form-group col-md-6">
-                    <label for="company_abn">ABN / Business Number</label>
+                    <label for="company_abn">GST Number</label>
                     <input type="text" id="company_abn" name="company_abn" class="form-control"
                         value="<?php echo htmlspecialchars($companyAbn); ?>" placeholder="12 345 678 901">
                 </div>

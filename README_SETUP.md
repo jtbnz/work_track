@@ -194,7 +194,7 @@ To send quotes via email, configure SMTP settings:
 PDF generation works automatically once Composer dependencies are installed. Configure your company details in **Quoting → Settings**:
 
 - Company logo (upload JPG, PNG, GIF, or WebP)
-- Company name, ABN, address, phone, email, website
+- Company name, GST, address, phone, email, website
 - Terms & conditions
 - Footer text
 
