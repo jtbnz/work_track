@@ -395,6 +395,12 @@ $companyName = $companyNameRow ? $companyNameRow['setting_value'] : 'Our Company
                 <div class="form-group">
                     <label for="foamSqMeters">Square Meters</label>
                     <input type="number" id="foamSqMeters" class="form-control" min="0.01" step="0.01" placeholder="0.00" disabled>
+                    <div class="foam-area-calc">
+                        <input type="number" id="foamLength" class="form-control" min="0.01" step="0.01" placeholder="Length (m)" disabled>
+                        <span class="foam-area-calc-x">&times;</span>
+                        <input type="number" id="foamWidth" class="form-control" min="0.01" step="0.01" placeholder="Width (m)" disabled>
+                        <span class="foam-area-calc-result" id="foamAreaResult"></span>
+                    </div>
                 </div>
                 <div class="form-group foam-cutting-group">
                     <label>&nbsp;</label>
@@ -1032,6 +1038,30 @@ $companyName = $companyNameRow ? $companyNameRow['setting_value'] : 'Our Company
     margin: 0;
     font-weight: normal;
     cursor: pointer;
+}
+
+.foam-area-calc {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+.foam-area-calc input {
+    width: 90px;
+    padding: 4px 6px;
+    font-size: 12px;
+}
+
+.foam-area-calc-x {
+    font-weight: bold;
+    color: #888;
+}
+
+.foam-area-calc-result {
+    font-size: 12px;
+    color: #555;
+    white-space: nowrap;
 }
 
 .foam-price-preview {
@@ -1676,6 +1706,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const foamCuttingCheckbox = document.getElementById('foamCuttingRequired');
     const addFoamBtn = document.getElementById('addFoamBtn');
     const foamPricePreview = document.getElementById('foamPricePreview');
+    const foamLengthInput = document.getElementById('foamLength');
+    const foamWidthInput = document.getElementById('foamWidth');
+    const foamAreaResult = document.getElementById('foamAreaResult');
     let foamIndex = document.querySelectorAll('#foamBody tr[data-foam-idx]').length;
     let selectedFoamProduct = null;
 
@@ -1686,6 +1719,9 @@ document.addEventListener('DOMContentLoaded', function() {
             foamThicknessSelect.disabled = true;
             foamSqMetersInput.disabled = true;
             foamSqMetersInput.value = '';
+            if (foamLengthInput) { foamLengthInput.disabled = true; foamLengthInput.value = ''; }
+            if (foamWidthInput) { foamWidthInput.disabled = true; foamWidthInput.value = ''; }
+            if (foamAreaResult) foamAreaResult.textContent = '';
             addFoamBtn.disabled = true;
             foamPricePreview.style.display = 'none';
             selectedFoamProduct = null;
@@ -1711,6 +1747,9 @@ document.addEventListener('DOMContentLoaded', function() {
             const selectedOption = this.options[this.selectedIndex];
             foamSqMetersInput.disabled = true;
             foamSqMetersInput.value = '';
+            if (foamLengthInput) { foamLengthInput.disabled = true; foamLengthInput.value = ''; }
+            if (foamWidthInput) { foamWidthInput.disabled = true; foamWidthInput.value = ''; }
+            if (foamAreaResult) foamAreaResult.textContent = '';
             addFoamBtn.disabled = true;
             foamPricePreview.style.display = 'none';
             selectedFoamProduct = null;
@@ -1724,14 +1763,38 @@ document.addEventListener('DOMContentLoaded', function() {
                     gradeCode: selectedOption.dataset.gradeCode
                 };
                 foamSqMetersInput.disabled = false;
+                if (foamLengthInput) foamLengthInput.disabled = false;
+                if (foamWidthInput) foamWidthInput.disabled = false;
                 updateFoamPricePreview();
             }
         });
 
-        foamSqMetersInput.addEventListener('input', updateFoamPricePreview);
+        foamSqMetersInput.addEventListener('input', function() {
+            // Clear length/width when user types directly into sq meters
+            if (foamLengthInput) foamLengthInput.value = '';
+            if (foamWidthInput) foamWidthInput.value = '';
+            if (foamAreaResult) foamAreaResult.textContent = '';
+            updateFoamPricePreview();
+        });
         if (foamCuttingCheckbox) {
             foamCuttingCheckbox.addEventListener('change', updateFoamPricePreview);
         }
+
+        function calculateFoamArea() {
+            const length = parseFloat(foamLengthInput.value) || 0;
+            const width = parseFloat(foamWidthInput.value) || 0;
+            if (length > 0 && width > 0) {
+                const area = length * width;
+                foamSqMetersInput.value = area.toFixed(2);
+                foamAreaResult.textContent = '= ' + area.toFixed(2) + ' m²';
+            } else {
+                foamAreaResult.textContent = '';
+            }
+            updateFoamPricePreview();
+        }
+
+        if (foamLengthInput) foamLengthInput.addEventListener('input', calculateFoamArea);
+        if (foamWidthInput) foamWidthInput.addEventListener('input', calculateFoamArea);
 
         function updateFoamPricePreview() {
             if (!selectedFoamProduct) {
@@ -1790,6 +1853,9 @@ document.addEventListener('DOMContentLoaded', function() {
             foamThicknessSelect.disabled = true;
             foamSqMetersInput.value = '';
             foamSqMetersInput.disabled = true;
+            if (foamLengthInput) { foamLengthInput.value = ''; foamLengthInput.disabled = true; }
+            if (foamWidthInput) { foamWidthInput.value = ''; foamWidthInput.disabled = true; }
+            if (foamAreaResult) foamAreaResult.textContent = '';
             if (foamCuttingCheckbox) foamCuttingCheckbox.checked = false;
             addFoamBtn.disabled = true;
             foamPricePreview.style.display = 'none';
