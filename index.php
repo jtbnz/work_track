@@ -179,7 +179,7 @@ $upcomingDeadlines = $db->fetchAll("
                                 $summary = [];
                                 foreach (array_slice($changes, 0, 2) as $key => $value) {
                                     if (!is_array($value)) {
-                                        $summary[] = $key . ': ' . substr($value, 0, 30);
+                                        $summary[] = $key . ': ' . substr((string)$value, 0, 30);
                                     }
                                 }
                                 echo htmlspecialchars(implode(', ', $summary));
