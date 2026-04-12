@@ -85,8 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $isEditable) {
                         $quoteModel->addFoam($quoteId, [
                             'foam_product_id' => (int)$foam['foam_product_id'],
                             'square_meters' => (float)$foam['square_meters'],
-                            'cutting_required' => isset($foam['cutting_required']) ? 1 : 0,
-                        'glue_prep_required' => isset($foam['glue_prep_required']) ? 1 : 0
+                            'cutting_required' => isset($foam['cutting_required']) ? 1 : 0
                         ]);
                     }
                 }
@@ -136,8 +135,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $isEditable) {
                         $quoteModel->addFoam($quote['id'], [
                             'foam_product_id' => (int)$foam['foam_product_id'],
                             'square_meters' => (float)$foam['square_meters'],
-                            'cutting_required' => isset($foam['cutting_required']) ? 1 : 0,
-                        'glue_prep_required' => isset($foam['glue_prep_required']) ? 1 : 0
+                            'cutting_required' => isset($foam['cutting_required']) ? 1 : 0
                         ]);
                     }
                 }
@@ -212,8 +210,6 @@ $foamMarkup = $db->fetchOne("SELECT setting_value FROM settings WHERE setting_ke
 $foamMarkup = $foamMarkup ? (float)$foamMarkup['setting_value'] : 2;
 $foamCuttingFee = $db->fetchOne("SELECT setting_value FROM settings WHERE setting_key = 'foam_cutting_fee_percent'");
 $foamCuttingFee = $foamCuttingFee ? (float)$foamCuttingFee['setting_value'] : 15;
-$foamGluePrepFee = $db->fetchOne("SELECT setting_value FROM settings WHERE setting_key = 'foam_glue_prep_fee_percent'");
-$foamGluePrepFee = $foamGluePrepFee ? (float)$foamGluePrepFee['setting_value'] : 10;
 
 // Get company name for email subject
 $companyNameRow = $db->fetchOne("SELECT setting_value FROM settings WHERE setting_key = 'company_name'");
@@ -413,13 +409,6 @@ $companyName = $companyNameRow ? $companyNameRow['setting_value'] : 'Our Company
                         <label for="foamCuttingRequired">Cutting Required (+<?php echo $foamCuttingFee; ?>%)</label>
                     </div>
                 </div>
-                <div class="form-group foam-cutting-group">
-                    <label>&nbsp;</label>
-                    <div class="checkbox-wrapper">
-                        <input type="checkbox" id="foamGluePrepRequired">
-                        <label for="foamGluePrepRequired">Glue/Prep (+<?php echo $foamGluePrepFee; ?>%)</label>
-                    </div>
-                </div>
                 <div class="form-group">
                     <label>&nbsp;</label>
                     <button type="button" id="addFoamBtn" class="btn btn-primary" disabled>Add Foam</button>
@@ -439,15 +428,14 @@ $companyName = $companyNameRow ? $companyNameRow['setting_value'] : 'Our Company
         <table class="foam-table">
             <thead>
                 <tr>
-                    <th style="width: 17%;">Grade</th>
-                    <th style="width: 12%;">Thickness</th>
-                    <th style="width: 12%;">Sq Meters</th>
-                    <th style="width: 9%;">Cutting</th>
-                    <th style="width: 9%;">Glue/Prep</th>
-                    <th style="width: 14%;">Unit Cost</th>
-                    <th style="width: 14%;">Line Total</th>
+                    <th style="width: 20%;">Grade</th>
+                    <th style="width: 15%;">Thickness</th>
+                    <th style="width: 15%;">Sq Meters</th>
+                    <th style="width: 10%;">Cutting</th>
+                    <th style="width: 15%;">Unit Cost</th>
+                    <th style="width: 15%;">Line Total</th>
                     <?php if ($isEditable): ?>
-                        <th style="width: 8%;">Actions</th>
+                        <th style="width: 10%;">Actions</th>
                     <?php endif; ?>
                 </tr>
             </thead>
@@ -474,12 +462,6 @@ $companyName = $companyNameRow ? $companyNameRow['setting_value'] : 'Our Company
                                     <input type="hidden" name="foam[<?php echo $idx; ?>][cutting_required]" value="1">
                                 <?php endif; ?>
                             </td>
-                            <td>
-                                <?php echo $foam['glue_prep_required'] ? 'Yes' : 'No'; ?>
-                                <?php if ($foam['glue_prep_required']): ?>
-                                    <input type="hidden" name="foam[<?php echo $idx; ?>][glue_prep_required]" value="1">
-                                <?php endif; ?>
-                            </td>
                             <td>$<?php echo number_format($foam['unit_cost'], 2); ?>/m²</td>
                             <td class="foam-line-total">$<?php echo number_format($foam['line_total'], 2); ?></td>
                             <?php if ($isEditable): ?>
@@ -491,7 +473,7 @@ $companyName = $companyNameRow ? $companyNameRow['setting_value'] : 'Our Company
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr class="no-foam">
-                        <td colspan="<?php echo $isEditable ? 8 : 7; ?>" style="text-align: center; color: #666;">
+                        <td colspan="<?php echo $isEditable ? 7 : 6; ?>" style="text-align: center; color: #666;">
                             No foam items added yet. Select a grade and thickness above to add foam.
                         </td>
                     </tr>
@@ -499,7 +481,7 @@ $companyName = $companyNameRow ? $companyNameRow['setting_value'] : 'Our Company
             </tbody>
             <tfoot>
                 <tr>
-                    <td colspan="<?php echo $isEditable ? 6 : 5; ?>" style="text-align: right;"><strong>Foam Subtotal:</strong></td>
+                    <td colspan="<?php echo $isEditable ? 5 : 4; ?>" style="text-align: right;"><strong>Foam Subtotal:</strong></td>
                     <td colspan="<?php echo $isEditable ? 2 : 2; ?>"><strong id="foamSubtotal">$<?php echo number_format($quote['subtotal_foam'] ?? 0, 2); ?></strong></td>
                 </tr>
             </tfoot>
@@ -1306,7 +1288,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const gstRate = <?php echo $gstRate; ?>;
     const foamMarkup = <?php echo $foamMarkup; ?>;
     const foamCuttingFee = <?php echo $foamCuttingFee; ?>;
-    const foamGluePrepFee = <?php echo $foamGluePrepFee; ?>;
 
 
     // Labour calculation
@@ -1725,7 +1706,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const foamCuttingCheckbox = document.getElementById('foamCuttingRequired');
     const addFoamBtn = document.getElementById('addFoamBtn');
     const foamPricePreview = document.getElementById('foamPricePreview');
-    const foamGluePrepCheckbox = document.getElementById('foamGluePrepRequired');
     const foamLengthInput = document.getElementById('foamLength');
     const foamWidthInput = document.getElementById('foamWidth');
     const foamAreaResult = document.getElementById('foamAreaResult');
@@ -1799,9 +1779,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (foamCuttingCheckbox) {
             foamCuttingCheckbox.addEventListener('change', updateFoamPricePreview);
         }
-        if (foamGluePrepCheckbox) {
-            foamGluePrepCheckbox.addEventListener('change', updateFoamPricePreview);
-        }
 
         function calculateFoamArea() {
             const length = parseFloat(foamLengthInput.value) || 0;
@@ -1828,7 +1805,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const sqMeters = parseFloat(foamSqMetersInput.value) || 0;
             const cuttingRequired = foamCuttingCheckbox ? foamCuttingCheckbox.checked : false;
-            const gluePrepRequired = foamGluePrepCheckbox ? foamGluePrepCheckbox.checked : false;
 
             const costPerSqM = selectedFoamProduct.sheetCost / selectedFoamProduct.sheetArea;
             const sellPerSqM = costPerSqM * foamMarkup;
@@ -1836,10 +1812,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (cuttingRequired) {
                 estTotal *= (1 + foamCuttingFee / 100);
-            }
-
-            if (gluePrepRequired) {
-                estTotal *= (1 + foamGluePrepFee / 100);
             }
 
             document.getElementById('foamSheetCost').textContent = selectedFoamProduct.sheetCost.toFixed(2);
@@ -1856,7 +1828,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const sqMeters = parseFloat(foamSqMetersInput.value);
             const cuttingRequired = foamCuttingCheckbox ? foamCuttingCheckbox.checked : false;
-            const gluePrepRequired = foamGluePrepCheckbox ? foamGluePrepCheckbox.checked : false;
 
             const costPerSqM = selectedFoamProduct.sheetCost / selectedFoamProduct.sheetArea;
             const sellPerSqM = costPerSqM * foamMarkup;
@@ -1866,17 +1837,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 lineTotal *= (1 + foamCuttingFee / 100);
             }
 
-            if (gluePrepRequired) {
-                lineTotal *= (1 + foamGluePrepFee / 100);
-            }
-
             addFoamToTable({
                 foamProductId: selectedFoamProduct.id,
                 gradeCode: selectedFoamProduct.gradeCode,
                 thickness: selectedFoamProduct.thickness,
                 sqMeters: sqMeters,
                 cuttingRequired: cuttingRequired,
-                gluePrepRequired: gluePrepRequired,
                 unitCost: sellPerSqM,
                 lineTotal: lineTotal
             });
@@ -1891,7 +1857,6 @@ document.addEventListener('DOMContentLoaded', function() {
             if (foamWidthInput) { foamWidthInput.value = ''; foamWidthInput.disabled = true; }
             if (foamAreaResult) foamAreaResult.textContent = '';
             if (foamCuttingCheckbox) foamCuttingCheckbox.checked = false;
-            if (foamGluePrepCheckbox) foamGluePrepCheckbox.checked = false;
             addFoamBtn.disabled = true;
             foamPricePreview.style.display = 'none';
             selectedFoamProduct = null;
@@ -1928,10 +1893,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 ${foam.cuttingRequired ? 'Yes' : 'No'}
                 ${foam.cuttingRequired ? `<input type="hidden" name="foam[${idx}][cutting_required]" value="1">` : ''}
             </td>
-            <td>
-                ${foam.gluePrepRequired ? 'Yes' : 'No'}
-                ${foam.gluePrepRequired ? `<input type="hidden" name="foam[${idx}][glue_prep_required]" value="1">` : ''}
-            </td>
             <td>$${foam.unitCost.toFixed(2)}/m²</td>
             <td class="foam-line-total">$${foam.lineTotal.toFixed(2)}</td>
             <td>
@@ -1957,7 +1918,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (tbody.querySelectorAll('tr[data-foam-idx]').length === 0) {
                     const emptyRow = document.createElement('tr');
                     emptyRow.className = 'no-foam';
-                    emptyRow.innerHTML = '<td colspan="8" style="text-align: center; color: #666;">No foam items added yet. Select a grade and thickness above to add foam.</td>';
+                    emptyRow.innerHTML = '<td colspan="7" style="text-align: center; color: #666;">No foam items added yet. Select a grade and thickness above to add foam.</td>';
                     tbody.appendChild(emptyRow);
                 }
             });

@@ -28,7 +28,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'foam_default_sheet_area' => (float)($_POST['foam_default_sheet_area'] ?? 3.91),
             'foam_markup_multiplier' => (float)($_POST['foam_markup_multiplier'] ?? 2),
             'foam_cutting_fee_percent' => (float)($_POST['foam_cutting_fee_percent'] ?? 15),
-            'foam_glue_prep_fee_percent' => (float)($_POST['foam_glue_prep_fee_percent'] ?? 10),
             'quote_terms' => $_POST['quote_terms'] ?? '',
             'quote_footer_text' => $_POST['quote_footer_text'] ?? '',
             // SMTP settings
@@ -148,7 +147,6 @@ $quoteFooterText = getSetting($db, 'quote_footer_text', '');
 $foamDefaultSheetArea = getSetting($db, 'foam_default_sheet_area', '3.91');
 $foamMarkupMultiplier = getSetting($db, 'foam_markup_multiplier', '2');
 $foamCuttingFeePercent = getSetting($db, 'foam_cutting_fee_percent', '15');
-$foamGluePrepFeePercent = getSetting($db, 'foam_glue_prep_fee_percent', '10');
 
 // SMTP settings
 $smtpHost = getSetting($db, 'smtp_host', '');
@@ -304,23 +302,17 @@ $smtpConfigured = !empty($smtpHost) && !empty($smtpFromEmail);
                         value="<?php echo htmlspecialchars($foamMarkupMultiplier); ?>" min="1" step="0.1">
                     <small class="form-text">Multiply cost per m² by this value (e.g., 2 = 100% markup)</small>
                 </div>
-                <div class="form-group col-md-3">
+                <div class="form-group col-md-4">
                     <label for="foam_cutting_fee_percent">Cutting Fee (%)</label>
                     <input type="number" id="foam_cutting_fee_percent" name="foam_cutting_fee_percent" class="form-control"
                         value="<?php echo htmlspecialchars($foamCuttingFeePercent); ?>" min="0" max="100" step="0.1">
                     <small class="form-text">Additional fee when cutting is required</small>
                 </div>
-                <div class="form-group col-md-3">
-                    <label for="foam_glue_prep_fee_percent">Glue/Prep Fee (%)</label>
-                    <input type="number" id="foam_glue_prep_fee_percent" name="foam_glue_prep_fee_percent" class="form-control"
-                        value="<?php echo htmlspecialchars($foamGluePrepFeePercent); ?>" min="0" max="100" step="0.1">
-                    <small class="form-text">Additional fee when glue/prep is required</small>
-                </div>
             </div>
 
             <div class="foam-formula-preview">
                 <strong>Formula Preview:</strong>
-                <code>Sell Price = (Sheet Cost ÷ <?php echo $foamDefaultSheetArea; ?>) × <?php echo $foamMarkupMultiplier; ?> × Sq Meters × (1 + <?php echo $foamCuttingFeePercent; ?>% if cutting) × (1 + <?php echo $foamGluePrepFeePercent; ?>% if glue/prep)</code>
+                <code>Sell Price = (Sheet Cost ÷ <?php echo $foamDefaultSheetArea; ?>) × <?php echo $foamMarkupMultiplier; ?> × Sq Meters × (1 + <?php echo $foamCuttingFeePercent; ?>% if cutting)</code>
             </div>
         </div>
 

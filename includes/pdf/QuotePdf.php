@@ -313,12 +313,11 @@ class QuotePdf extends TCPDF {
         $this->SetFillColor(233, 236, 239);
         $this->SetTextColor(0, 0, 0);
 
-        $this->Cell(50, 5, 'Description', 1, 0, 'L', true);
-        $this->Cell(22, 5, 'Area (m²)', 1, 0, 'C', true);
+        $this->Cell(62, 5, 'Description', 1, 0, 'L', true);
+        $this->Cell(25, 5, 'Area (m²)', 1, 0, 'C', true);
         $this->Cell(20, 5, 'Cutting', 1, 0, 'C', true);
-        $this->Cell(22, 5, 'Glue/Prep', 1, 0, 'C', true);
-        $this->Cell(36, 5, 'Unit Price', 1, 0, 'R', true);
-        $this->Cell(36, 5, 'Total', 1, 1, 'R', true);
+        $this->Cell(40, 5, 'Unit Price', 1, 0, 'R', true);
+        $this->Cell(39, 5, 'Total', 1, 1, 'R', true);
 
         // Table rows
         $this->SetFont('helvetica', '', 8);
@@ -328,14 +327,12 @@ class QuotePdf extends TCPDF {
         foreach ($foamItems as $foam) {
             $description = $foam['grade_code'] . ' - ' . $foam['thickness'];
             $cuttingText = $foam['cutting_required'] ? 'Yes' : 'No';
-            $gluePrepText = $foam['glue_prep_required'] ? 'Yes' : 'No';
 
-            $this->Cell(50, 5, $description, 1, 0, 'L', $fill);
-            $this->Cell(22, 5, number_format($foam['square_meters'], 2), 1, 0, 'C', $fill);
+            $this->Cell(62, 5, $description, 1, 0, 'L', $fill);
+            $this->Cell(25, 5, number_format($foam['square_meters'], 2), 1, 0, 'C', $fill);
             $this->Cell(20, 5, $cuttingText, 1, 0, 'C', $fill);
-            $this->Cell(22, 5, $gluePrepText, 1, 0, 'C', $fill);
-            $this->Cell(36, 5, '$' . number_format($foam['unit_cost'], 2) . '/m²', 1, 0, 'R', $fill);
-            $this->Cell(36, 5, '$' . number_format($foam['line_total'], 2), 1, 1, 'R', $fill);
+            $this->Cell(40, 5, '$' . number_format($foam['unit_cost'], 2) . '/m²', 1, 0, 'R', $fill);
+            $this->Cell(39, 5, '$' . number_format($foam['line_total'], 2), 1, 1, 'R', $fill);
 
             $fill = !$fill;
         }
@@ -343,8 +340,8 @@ class QuotePdf extends TCPDF {
         // Foam subtotal
         $this->SetFont('helvetica', 'B', 8);
         $foamTotal = array_sum(array_column($foamItems, 'line_total'));
-        $this->Cell(150, 5, 'Foam Subtotal:', 1, 0, 'R');
-        $this->Cell(36, 5, '$' . number_format($foamTotal, 2), 1, 1, 'R');
+        $this->Cell(147, 5, 'Foam Subtotal:', 1, 0, 'R');
+        $this->Cell(39, 5, '$' . number_format($foamTotal, 2), 1, 1, 'R');
     }
 
     private function renderMiscTable($miscItems) {
