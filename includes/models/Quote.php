@@ -320,6 +320,7 @@ class Quote {
                         'sheet_area' => $foam['sheet_area'],
                         'square_meters' => $foam['square_meters'],
                         'cutting_required' => $foam['cutting_required'],
+                        'glue_prep_required' => $foam['glue_prep_required'],
                         'unit_cost' => $foam['unit_cost'],
                         'line_total' => $foam['line_total'],
                         'sort_order' => $foam['sort_order']
@@ -752,7 +753,8 @@ class Quote {
             $data['sheet_cost'] ?? 0,
             $data['sheet_area'] ?? 3.91,
             $data['square_meters'],
-            $data['cutting_required'] ?? false
+            $data['cutting_required'] ?? false,
+            $data['glue_prep_required'] ?? false
         );
 
         $id = $this->db->insert('quote_foam', [
@@ -764,6 +766,7 @@ class Quote {
             'sheet_area' => $data['sheet_area'] ?? 3.91,
             'square_meters' => $data['square_meters'],
             'cutting_required' => ($data['cutting_required'] ?? 0) ? 1 : 0,
+            'glue_prep_required' => ($data['glue_prep_required'] ?? 0) ? 1 : 0,
             'unit_cost' => $calculation['unit_cost'],
             'line_total' => $calculation['line_total'],
             'sort_order' => $sortOrder
@@ -781,14 +784,15 @@ class Quote {
      */
     public function updateFoam($foamId, $data) {
         // Recalculate if needed
-        if (isset($data['square_meters']) || isset($data['cutting_required'])) {
+        if (isset($data['square_meters']) || isset($data['cutting_required']) || isset($data['glue_prep_required'])) {
             $foam = $this->db->fetchOne("SELECT * FROM quote_foam WHERE id = :id", ['id' => $foamId]);
             if ($foam) {
                 $calculation = $this->calculateFoamCost(
                     $data['sheet_cost'] ?? $foam['sheet_cost'],
                     $data['sheet_area'] ?? $foam['sheet_area'],
                     $data['square_meters'] ?? $foam['square_meters'],
-                    $data['cutting_required'] ?? $foam['cutting_required']
+                    $data['cutting_required'] ?? $foam['cutting_required'],
+                    $data['glue_prep_required'] ?? $foam['glue_prep_required']
                 );
                 $data['unit_cost'] = $calculation['unit_cost'];
                 $data['line_total'] = $calculation['line_total'];
@@ -831,12 +835,13 @@ class Quote {
 
     /**
      * Calculate foam cost based on formula:
-     * (cost_per_sqm × quantity × markup) × (1 + cutting_fee)
+     * (cost_per_sqm × quantity × markup) × (1 + cutting_fee) × (1 + glue_prep_fee)
      */
-    public function calculateFoamCost($sheetCost, $sheetArea, $squareMeters, $cuttingRequired = false) {
+    public function calculateFoamCost($sheetCost, $sheetArea, $squareMeters, $cuttingRequired = false, $gluePrepRequired = false) {
         // Get settings
         $markup = (float)$this->getSetting('foam_markup_multiplier', 2);
         $cuttingFee = (float)$this->getSetting('foam_cutting_fee_percent', 15);
+        $gluePrepFee = (float)$this->getSetting('foam_glue_prep_fee_percent', 10);
 
         // Cost per square meter (base cost)
         $costPerSqM = $sheetArea > 0 ? $sheetCost / $sheetArea : 0;
@@ -844,7 +849,7 @@ class Quote {
         // Apply markup to get unit cost (cost per m² after markup)
         $unitCost = $costPerSqM * $markup;
 
-        // Calculate line total (before cutting fee)
+        // Calculate line total (before fees)
         $lineTotal = $unitCost * $squareMeters;
 
         // Apply cutting fee if required
@@ -852,11 +857,17 @@ class Quote {
             $lineTotal *= (1 + $cuttingFee / 100);
         }
 
+        // Apply glue/prep fee if required
+        if ($gluePrepRequired) {
+            $lineTotal *= (1 + $gluePrepFee / 100);
+        }
+
         return [
             'unit_cost' => round($unitCost, 2),
             'line_total' => round($lineTotal, 2),
             'markup' => $markup,
-            'cutting_fee_percent' => $cuttingFee
+            'cutting_fee_percent' => $cuttingFee,
+            'glue_prep_fee_percent' => $gluePrepFee
         ];
     }
 
