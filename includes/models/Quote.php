@@ -193,8 +193,8 @@ class Quote {
         if ($result) {
             // Recalculate totals if labour values changed
             $labourFields = ['labour_stripping', 'labour_patterns', 'labour_cutting',
-                           'labour_sewing', 'labour_upholstery', 'labour_assembly',
-                           'labour_handling', 'labour_rate_type'];
+                           'labour_glue_prep', 'labour_sewing', 'labour_upholstery',
+                           'labour_assembly', 'labour_handling', 'labour_rate_type'];
             $labourChanged = false;
             foreach ($labourFields as $field) {
                 if (isset($data[$field])) {
@@ -264,6 +264,7 @@ class Quote {
             'labour_stripping' => $original['labour_stripping'],
             'labour_patterns' => $original['labour_patterns'],
             'labour_cutting' => $original['labour_cutting'],
+            'labour_glue_prep' => $original['labour_glue_prep'],
             'labour_sewing' => $original['labour_sewing'],
             'labour_upholstery' => $original['labour_upholstery'],
             'labour_assembly' => $original['labour_assembly'],
@@ -529,6 +530,7 @@ class Quote {
         $totalMinutes = (int)$quote['labour_stripping'] +
                         (int)$quote['labour_patterns'] +
                         (int)$quote['labour_cutting'] +
+                        (int)$quote['labour_glue_prep'] +
                         (int)$quote['labour_sewing'] +
                         (int)$quote['labour_upholstery'] +
                         (int)$quote['labour_assembly'] +

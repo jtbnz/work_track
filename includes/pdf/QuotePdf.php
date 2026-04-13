@@ -406,6 +406,7 @@ class QuotePdf extends TCPDF {
             'labour_stripping' => 'Stripping',
             'labour_patterns' => 'Patterns',
             'labour_cutting' => 'Cutting',
+            'labour_glue_prep' => 'Glue/Prep',
             'labour_sewing' => 'Sewing',
             'labour_upholstery' => 'Upholstery',
             'labour_assembly' => 'Assembly',
@@ -478,6 +479,7 @@ class QuotePdf extends TCPDF {
         return ($quote['labour_stripping'] ?? 0) > 0 ||
                ($quote['labour_patterns'] ?? 0) > 0 ||
                ($quote['labour_cutting'] ?? 0) > 0 ||
+               ($quote['labour_glue_prep'] ?? 0) > 0 ||
                ($quote['labour_sewing'] ?? 0) > 0 ||
                ($quote['labour_upholstery'] ?? 0) > 0 ||
                ($quote['labour_assembly'] ?? 0) > 0 ||
