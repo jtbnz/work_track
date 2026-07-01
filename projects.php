@@ -143,8 +143,9 @@ $showForm = isset($_GET['action']) && $_GET['action'] === 'new' || $editProject;
             <div style="display: flex; gap: 10px; align-items: center;">
                 <select id="client_id" name="client_id" class="form-control" style="flex: 1;">
                     <option value="">-- No Client --</option>
+                    <?php $selectedClientId = $editProject['client_id'] ?? $filters['client_id']; ?>
                     <?php foreach ($clients as $client): ?>
-                        <option value="<?php echo $client['id']; ?>" <?php echo ($editProject['client_id'] ?? '') == $client['id'] ? 'selected' : ''; ?>>
+                        <option value="<?php echo $client['id']; ?>" <?php echo $selectedClientId == $client['id'] ? 'selected' : ''; ?>>
                             <?php echo htmlspecialchars($client['name']); ?>
                         </option>
                     <?php endforeach; ?>

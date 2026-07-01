@@ -6,6 +6,7 @@ require_once 'includes/models/Client.php';
 $clientModel = new Client();
 $message = '';
 $messageType = '';
+$newClientId = null;
 
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -20,7 +21,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'remarks' => $_POST['remarks'] ?? ''
         ];
 
-        if ($clientModel->create($data)) {
+        $newClientId = $clientModel->create($data);
+
+        if ($newClientId) {
             $message = 'Client created successfully!';
             $messageType = 'success';
         } else {
@@ -94,6 +97,9 @@ $showForm = isset($_GET['action']) && $_GET['action'] === 'new' || $editClient;
 <?php if ($message): ?>
     <div class="alert alert-<?php echo $messageType; ?>">
         <?php echo htmlspecialchars($message); ?>
+        <?php if ($newClientId): ?>
+            <a href="projects.php?action=new&client=<?php echo $newClientId; ?>" class="btn btn-sm btn-primary" style="margin-left: 10px;">➕ New Project for this Client</a>
+        <?php endif; ?>
     </div>
 <?php endif; ?>
 
