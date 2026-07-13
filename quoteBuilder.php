@@ -492,8 +492,11 @@ $companyName = $companyNameRow ? $companyNameRow['setting_value'] : 'Our Company
 
     <!-- Materials Section -->
     <div class="quote-section materials-section">
-        <div class="section-header">
+        <div class="section-header" style="display: flex; justify-content: space-between; align-items: center;">
             <h3>Materials</h3>
+            <button type="button" class="btn btn-sm btn-secondary"
+                onclick="window.open('materials_popout.php', 'worktrackStockWindow', 'width=440,height=720,resizable=yes,scrollbars=yes,menubar=no,toolbar=no,location=no,status=no')"
+                title="Open floating stock window">&#10696; Stock Window</button>
         </div>
 
         <?php if ($isEditable): ?>

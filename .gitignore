@@ -1,3 +1,6 @@
+# Development screenshots / examples
+examples/
+
 # Database files
 database/*.db
 database/*.db-journal

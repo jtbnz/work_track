@@ -24,6 +24,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'gst_rate' => (float)($_POST['gst_rate'] ?? 15),
             'quote_validity_days' => (int)($_POST['quote_validity_days'] ?? 30),
             'invoice_payment_terms' => $_POST['invoice_payment_terms'] ?? 'Net 14',
+            // Inventory settings
+            'materials_low_stock_threshold' => (float)($_POST['materials_low_stock_threshold'] ?? 0),
             // Foam settings
             'foam_default_sheet_area' => (float)($_POST['foam_default_sheet_area'] ?? 3.91),
             'foam_markup_multiplier' => (float)($_POST['foam_markup_multiplier'] ?? 2),
@@ -142,6 +144,9 @@ $quoteValidityDays = getSetting($db, 'quote_validity_days', '30');
 $invoicePaymentTerms = getSetting($db, 'invoice_payment_terms', 'Net 14');
 $quoteTerms = getSetting($db, 'quote_terms', "1. This quote is valid for 30 days from the date of issue.\n2. A 50% deposit is required to commence work.\n3. Final payment is due upon completion.\n4. Prices are inclusive of GST where shown.\n5. Any variations to the quoted scope may result in price adjustments.");
 $quoteFooterText = getSetting($db, 'quote_footer_text', '');
+
+// Inventory settings
+$materialsLowStockThreshold = getSetting($db, 'materials_low_stock_threshold', '0');
 
 // Foam settings
 $foamDefaultSheetArea = getSetting($db, 'foam_default_sheet_area', '3.91');
@@ -270,6 +275,15 @@ $smtpConfigured = !empty($smtpHost) && !empty($smtpFromEmail);
                     <label for="quote_validity_days">Quote Validity (days)</label>
                     <input type="number" id="quote_validity_days" name="quote_validity_days" class="form-control"
                         value="<?php echo htmlspecialchars($quoteValidityDays); ?>" min="1" max="365">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group col-md-3">
+                    <label for="materials_low_stock_threshold">Low Stock Threshold</label>
+                    <input type="number" id="materials_low_stock_threshold" name="materials_low_stock_threshold" class="form-control"
+                        value="<?php echo htmlspecialchars($materialsLowStockThreshold); ?>" min="0" step="0.01">
+                    <small class="form-text">Materials with stock at or below this level are flagged as low stock (default 0)</small>
                 </div>
             </div>
 

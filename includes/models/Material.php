@@ -27,6 +27,18 @@ class Material {
             $whereConditions[] = "m.stock_on_hand <= m.reorder_level";
         }
 
+        // Stock status filter: 'low' (<= configurable threshold), 'in' (> 0), 'out' (<= 0)
+        if (!empty($filters['stock'])) {
+            if ($filters['stock'] === 'low') {
+                $whereConditions[] = "m.stock_on_hand <= :low_stock_threshold";
+                $params['low_stock_threshold'] = (float)($filters['low_stock_threshold'] ?? 0);
+            } elseif ($filters['stock'] === 'in') {
+                $whereConditions[] = "m.stock_on_hand > 0";
+            } elseif ($filters['stock'] === 'out') {
+                $whereConditions[] = "m.stock_on_hand <= 0";
+            }
+        }
+
         if (!empty($filters['active_only'])) {
             $whereConditions[] = "m.is_active = 1";
         }

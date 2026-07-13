@@ -242,6 +242,11 @@ if (isset($_GET['imported']) && $_GET['imported'] === '1') {
     $messageType = 'success';
 }
 
+// Configurable low stock threshold (default 0)
+require_once 'includes/models/Settings.php';
+$settingsModel = new Settings();
+$lowStockThreshold = (float)$settingsModel->get('materials_low_stock_threshold', '0');
+
 // Build filters for materials tab
 $filters = [];
 if (!empty($_GET['supplier'])) {
@@ -250,8 +255,10 @@ if (!empty($_GET['supplier'])) {
 if (!empty($_GET['search'])) {
     $filters['search'] = $_GET['search'];
 }
-if (!empty($_GET['lowStock'])) {
-    $filters['low_stock'] = true;
+$stockFilter = $_GET['stock'] ?? '';
+if (in_array($stockFilter, ['low', 'in', 'out'], true)) {
+    $filters['stock'] = $stockFilter;
+    $filters['low_stock_threshold'] = $lowStockThreshold;
 }
 
 // Sorting for materials
@@ -341,10 +348,13 @@ $defaultSheetArea = $defaultSheetArea ? (float)$defaultSheetArea['setting_value'
 <?php if ($activeTab === 'materials'): ?>
 <div class="tab-content">
     <div class="tab-actions">
-        <form method="GET" style="display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+        <form method="GET" id="materialsFilterForm" class="filter-bar">
             <input type="hidden" name="tab" value="materials">
-            <input type="text" name="search" placeholder="Search materials..." value="<?php echo htmlspecialchars($_GET['search'] ?? ''); ?>" class="form-control" style="width: 200px;">
-            <select name="supplier" class="form-control" style="width: 150px;">
+            <div class="filter-search">
+                <span class="filter-search-icon">&#128269;</span>
+                <input type="text" name="search" placeholder="Search materials..." value="<?php echo htmlspecialchars($_GET['search'] ?? ''); ?>" class="form-control">
+            </div>
+            <select name="supplier" class="form-control filter-select" onchange="this.form.submit()">
                 <option value="">All Suppliers</option>
                 <?php foreach ($suppliers as $supplier): ?>
                     <option value="<?php echo $supplier['id']; ?>" <?php echo ($_GET['supplier'] ?? '') == $supplier['id'] ? 'selected' : ''; ?>>
@@ -352,13 +362,18 @@ $defaultSheetArea = $defaultSheetArea ? (float)$defaultSheetArea['setting_value'
                     </option>
                 <?php endforeach; ?>
             </select>
-            <label style="display: inline-flex; align-items: center; gap: 5px;">
-                <input type="checkbox" name="lowStock" value="1" <?php echo !empty($_GET['lowStock']) ? 'checked' : ''; ?>>
-                Low Stock Only
-            </label>
-            <button type="submit" class="btn btn-secondary">Filter</button>
+            <select name="stock" class="form-control filter-select" onchange="this.form.submit()">
+                <option value="">All Stock Levels</option>
+                <option value="in" <?php echo $stockFilter === 'in' ? 'selected' : ''; ?>>In Stock</option>
+                <option value="low" <?php echo $stockFilter === 'low' ? 'selected' : ''; ?>>Low Stock (&le; <?php echo $lowStockThreshold + 0; ?>)</option>
+                <option value="out" <?php echo $stockFilter === 'out' ? 'selected' : ''; ?>>Out of Stock</option>
+            </select>
+            <?php if (!empty($_GET['search']) || !empty($_GET['supplier']) || $stockFilter !== ''): ?>
+                <a href="?tab=materials" class="filter-clear" title="Clear filters">&#10005; Clear</a>
+            <?php endif; ?>
         </form>
         <div style="display: flex; gap: 10px;">
+            <button type="button" class="btn btn-outline" onclick="openStockWindow()" title="Open floating stock window">&#10696; Stock Window</button>
             <a href="?tab=materials&action=import" class="btn btn-info">Import CSV</a>
             <a href="?tab=materials&action=new" class="btn btn-primary">+ New Material</a>
         </div>
@@ -524,7 +539,8 @@ $defaultSheetArea = $defaultSheetArea ? (float)$defaultSheetArea['setting_value'
             <tbody>
                 <?php foreach ($materials as $material): ?>
                     <?php
-                    $isLowStock = $material['stock_on_hand'] <= $material['reorder_level'];
+                    $isOutOfStock = $material['stock_on_hand'] <= 0;
+                    $isLowStock = !$isOutOfStock && $material['stock_on_hand'] <= $lowStockThreshold;
                     ?>
                     <tr>
                         <td>
@@ -538,11 +554,13 @@ $defaultSheetArea = $defaultSheetArea ? (float)$defaultSheetArea['setting_value'
                         <td>$<?php echo number_format($material['cost_excl'], 2); ?></td>
                         <td>$<?php echo number_format($material['sell_price'], 2); ?></td>
                         <td>
-                            <span class="<?php echo $isLowStock ? 'stock-low' : ''; ?>">
+                            <span class="<?php echo ($isOutOfStock || $isLowStock) ? 'stock-low' : ''; ?>">
                                 <?php echo $material['stock_on_hand']; ?>
                             </span>
-                            <?php if ($isLowStock): ?>
-                                <span class="badge badge-warning" title="Below reorder level of <?php echo $material['reorder_level']; ?>">Low</span>
+                            <?php if ($isOutOfStock): ?>
+                                <span class="badge badge-danger" title="Out of stock">Out</span>
+                            <?php elseif ($isLowStock): ?>
+                                <span class="badge badge-warning" title="At or below low stock threshold of <?php echo $lowStockThreshold + 0; ?>">Low</span>
                             <?php endif; ?>
                         </td>
                         <td>
@@ -552,14 +570,13 @@ $defaultSheetArea = $defaultSheetArea ? (float)$defaultSheetArea['setting_value'
                                 <span class="badge badge-secondary">Inactive</span>
                             <?php endif; ?>
                         </td>
-                        <td>
-                            <a href="?tab=materials&edit=<?php echo $material['id']; ?>" class="btn btn-sm btn-warning">Edit</a>
-                            <a href="?tab=materials&adjustStock=<?php echo $material['id']; ?>" class="btn btn-sm btn-info">Stock</a>
-                            <form method="POST" style="display: inline-block;" onsubmit="return confirm('Are you sure you want to delete this material?');">
-                                <input type="hidden" name="action" value="delete">
-                                <input type="hidden" name="id" value="<?php echo $material['id']; ?>">
-                                <button type="submit" class="btn btn-sm btn-danger">Delete</button>
-                            </form>
+                        <td class="actions-cell">
+                            <button type="button" class="action-menu-btn" aria-label="Actions" aria-haspopup="true"
+                                data-edit-url="?tab=materials&edit=<?php echo $material['id']; ?>"
+                                data-stock-url="?tab=materials&adjustStock=<?php echo $material['id']; ?>"
+                                data-delete-id="<?php echo $material['id']; ?>"
+                                data-delete-action="delete"
+                                data-delete-confirm="Are you sure you want to delete this material?">&#8942;</button>
                         </td>
                     </tr>
                 <?php endforeach; ?>
@@ -733,13 +750,12 @@ $defaultSheetArea = $defaultSheetArea ? (float)$defaultSheetArea['setting_value'
                                         <span class="badge badge-secondary">Inactive</span>
                                     <?php endif; ?>
                                 </td>
-                                <td>
-                                    <a href="?tab=foam&editProduct=<?php echo $product['id']; ?>" class="btn btn-sm btn-warning">Edit</a>
-                                    <form method="POST" style="display: inline-block;" onsubmit="return confirm('Are you sure you want to delete this foam product?');">
-                                        <input type="hidden" name="action" value="deleteFoamProduct">
-                                        <input type="hidden" name="id" value="<?php echo $product['id']; ?>">
-                                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
-                                    </form>
+                                <td class="actions-cell">
+                                    <button type="button" class="action-menu-btn" aria-label="Actions" aria-haspopup="true"
+                                        data-edit-url="?tab=foam&editProduct=<?php echo $product['id']; ?>"
+                                        data-delete-id="<?php echo $product['id']; ?>"
+                                        data-delete-action="deleteFoamProduct"
+                                        data-delete-confirm="Are you sure you want to delete this foam product?">&#8942;</button>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -820,13 +836,12 @@ $defaultSheetArea = $defaultSheetArea ? (float)$defaultSheetArea['setting_value'
                                 <span class="badge badge-secondary">Inactive</span>
                             <?php endif; ?>
                         </td>
-                        <td>
-                            <a href="?tab=misc&editMisc=<?php echo $misc['id']; ?>" class="btn btn-sm btn-warning">Edit</a>
-                            <form method="POST" style="display: inline-block;" onsubmit="return confirm('Are you sure you want to delete this misc charge?');">
-                                <input type="hidden" name="action" value="deleteMisc">
-                                <input type="hidden" name="id" value="<?php echo $misc['id']; ?>">
-                                <button type="submit" class="btn btn-sm btn-danger">Delete</button>
-                            </form>
+                        <td class="actions-cell">
+                            <button type="button" class="action-menu-btn" aria-label="Actions" aria-haspopup="true"
+                                data-edit-url="?tab=misc&editMisc=<?php echo $misc['id']; ?>"
+                                data-delete-id="<?php echo $misc['id']; ?>"
+                                data-delete-action="deleteMisc"
+                                data-delete-confirm="Are you sure you want to delete this misc charge?">&#8942;</button>
                         </td>
                     </tr>
                 <?php endforeach; ?>
@@ -843,7 +858,97 @@ $defaultSheetArea = $defaultSheetArea ? (float)$defaultSheetArea['setting_value'
 <?php endif; ?>
 
 <script>
+function openStockWindow() {
+    window.open('materials_popout.php', 'worktrackStockWindow',
+        'width=440,height=720,resizable=yes,scrollbars=yes,menubar=no,toolbar=no,location=no,status=no');
+}
+
 document.addEventListener('DOMContentLoaded', function() {
+    // Shared actions dropdown (single menu, fixed-position so it never clips inside the table)
+    const actionMenu = document.createElement('div');
+    actionMenu.className = 'action-menu';
+    actionMenu.setAttribute('role', 'menu');
+    document.body.appendChild(actionMenu);
+    let activeBtn = null;
+
+    function closeActionMenu() {
+        actionMenu.classList.remove('open');
+        if (activeBtn) activeBtn.classList.remove('active');
+        activeBtn = null;
+    }
+
+    function submitDelete(action, id, confirmMsg) {
+        if (!confirm(confirmMsg)) return;
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.innerHTML = '<input type="hidden" name="action">' +
+                         '<input type="hidden" name="id">';
+        form.elements['action'].value = action;
+        form.elements['id'].value = id;
+        document.body.appendChild(form);
+        form.submit();
+    }
+
+    document.addEventListener('click', function(e) {
+        const btn = e.target.closest('.action-menu-btn');
+        if (!btn) {
+            if (!e.target.closest('.action-menu')) closeActionMenu();
+            return;
+        }
+        if (activeBtn === btn) {
+            closeActionMenu();
+            return;
+        }
+        closeActionMenu();
+        activeBtn = btn;
+        btn.classList.add('active');
+
+        actionMenu.innerHTML = '';
+        if (btn.dataset.editUrl) {
+            const edit = document.createElement('a');
+            edit.href = btn.dataset.editUrl;
+            edit.className = 'action-menu-item';
+            edit.innerHTML = '<span class="ami-icon">&#9998;</span> Edit';
+            actionMenu.appendChild(edit);
+        }
+        if (btn.dataset.stockUrl) {
+            const stock = document.createElement('a');
+            stock.href = btn.dataset.stockUrl;
+            stock.className = 'action-menu-item';
+            stock.innerHTML = '<span class="ami-icon">&#9878;</span> Adjust Stock';
+            actionMenu.appendChild(stock);
+        }
+        if (btn.dataset.deleteId) {
+            const del = document.createElement('button');
+            del.type = 'button';
+            del.className = 'action-menu-item action-menu-danger';
+            del.innerHTML = '<span class="ami-icon">&#128465;</span> Delete';
+            del.addEventListener('click', function() {
+                closeActionMenu();
+                submitDelete(btn.dataset.deleteAction, btn.dataset.deleteId, btn.dataset.deleteConfirm);
+            });
+            actionMenu.appendChild(del);
+        }
+
+        const rect = btn.getBoundingClientRect();
+        actionMenu.classList.add('open');
+        const menuWidth = actionMenu.offsetWidth;
+        const menuHeight = actionMenu.offsetHeight;
+        let left = rect.right - menuWidth;
+        let top = rect.bottom + 4;
+        if (top + menuHeight > window.innerHeight - 10) {
+            top = rect.top - menuHeight - 4;
+        }
+        actionMenu.style.left = Math.max(10, left) + 'px';
+        actionMenu.style.top = top + 'px';
+    });
+
+    window.addEventListener('scroll', closeActionMenu, true);
+    window.addEventListener('resize', closeActionMenu);
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeActionMenu();
+    });
+
     const importForm = document.getElementById('importForm');
     if (importForm) {
         importForm.addEventListener('submit', function(e) {
@@ -975,6 +1080,142 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 .foam-grade-section table thead th {
     background: #fff;
+}
+
+/* Filter Bar */
+.filter-bar {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 8px 12px;
+}
+.filter-bar .form-control {
+    border: 1px solid transparent;
+    background: #f1f3f5;
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 14px;
+}
+.filter-bar .form-control:focus {
+    background: #fff;
+    border-color: #667eea;
+    box-shadow: none;
+}
+.filter-search {
+    position: relative;
+}
+.filter-search .form-control {
+    width: 220px;
+    padding-left: 32px;
+}
+.filter-search-icon {
+    position: absolute;
+    left: 9px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 13px;
+    opacity: 0.55;
+    pointer-events: none;
+}
+.filter-select {
+    width: auto;
+    min-width: 140px;
+}
+.filter-clear {
+    color: #6c757d;
+    font-size: 13px;
+    text-decoration: none;
+    padding: 6px 8px;
+    border-radius: 6px;
+    white-space: nowrap;
+}
+.filter-clear:hover {
+    background: #f1f3f5;
+    color: #dc3545;
+}
+
+/* Outline button (Stock Window) */
+.btn-outline {
+    background: #fff;
+    color: #667eea;
+    border: 1px solid #667eea;
+}
+.btn-outline:hover {
+    background: #667eea;
+    color: #fff;
+}
+
+/* Row actions kebab menu */
+.actions-cell {
+    text-align: center;
+    width: 60px;
+}
+.action-menu-btn {
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    width: 32px;
+    height: 32px;
+    font-size: 18px;
+    line-height: 1;
+    color: #495057;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.action-menu-btn:hover,
+.action-menu-btn.active {
+    background: #e9ecef;
+}
+.action-menu {
+    display: none;
+    position: fixed;
+    z-index: 3000;
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    min-width: 160px;
+    padding: 6px;
+}
+.action-menu.open {
+    display: block;
+}
+.action-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 10px;
+    border: none;
+    background: none;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #333;
+    text-decoration: none;
+    cursor: pointer;
+    text-align: left;
+}
+.action-menu-item:hover {
+    background: #f1f3f5;
+}
+.action-menu-danger {
+    color: #dc3545;
+}
+.action-menu-danger:hover {
+    background: #fdecee;
+}
+.ami-icon {
+    width: 18px;
+    text-align: center;
+    opacity: 0.8;
+}
+.badge-danger {
+    background-color: #dc3545;
+    color: white;
 }
 
 /* Existing Styles */
