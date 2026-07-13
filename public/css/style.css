@@ -167,7 +167,7 @@ body {
 }
 
 .stats-card {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #4462e5 0%, #764ba2 100%);
     color: white;
 }
 
@@ -267,21 +267,21 @@ textarea.form-control {
 }
 
 .btn-primary {
-    background: #667eea;
+    background: #4462e5;
     color: white;
 }
 
 .btn-primary:hover {
-    background: #5a67d8;
+    background: #3b57d4;
 }
 
 .btn-success {
-    background: #28a745;
+    background: #218838;
     color: white;
 }
 
 .btn-success:hover {
-    background: #218838;
+    background: #1c7430;
 }
 
 .btn-danger {
@@ -386,7 +386,7 @@ textarea.form-control {
     font-weight: bold;
     line-height: 20px;
     cursor: pointer;
-    color: #999;
+    color: #767676;
 }
 
 .modal-close:hover {

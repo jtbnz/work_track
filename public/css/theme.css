@@ -1,0 +1,310 @@
+/* ============================================================
+   WorkTrack Theme Suite
+   Light (default) and Dark mode driven by <html data-theme="...">
+   Loaded AFTER style.css. Pages should prefer these variables;
+   the [data-theme="dark"] overrides below re-skin legacy
+   hard-coded components.
+   ============================================================ */
+
+:root {
+    color-scheme: light;
+
+    /* Surfaces */
+    --bg: #f5f5f7;
+    --surface: #ffffff;
+    --surface-2: #f8f9fa;
+    --surface-3: #f1f3f5;
+    --line: #dee2e6;
+    --shadow: rgba(0, 0, 0, 0.08);
+    --shadow-strong: rgba(0, 0, 0, 0.15);
+
+    /* Text */
+    --text: #212529;
+    --text-secondary: #495057;
+    --text-muted: #5f6675;
+
+    /* Brand / accent
+       #4462e5 (not the legacy #667eea) so accent text and
+       white-on-accent both clear WCAG AA 4.5:1 on light surfaces */
+    --accent: #4462e5;
+    --accent-hover: #3b57d4;
+    --accent-contrast: #ffffff;
+    --accent-soft: rgba(68, 98, 229, 0.12);
+
+    /* Semantic fills (backgrounds for badges/buttons) */
+    --success: #28a745;
+    --warning: #ffc107;
+    --danger: #dc3545;
+    --info: #17a2b8;
+
+    /* Semantic TEXT colours - safe against --surface/--bg */
+    --success-text: #187339;
+    --warning-text: #855f00;
+    --danger-text: #c22636;
+    --info-text: #0c7183;
+}
+
+[data-theme="dark"] {
+    color-scheme: dark;
+
+    /* Surfaces */
+    --bg: #14161d;
+    --surface: #1d2029;
+    --surface-2: #262a36;
+    --surface-3: #2e3342;
+    --line: #363c4e;
+    --shadow: rgba(0, 0, 0, 0.35);
+    --shadow-strong: rgba(0, 0, 0, 0.55);
+
+    /* Text */
+    --text: #e8eaf0;
+    --text-secondary: #c6cad6;
+    --text-muted: #9aa1b3;
+
+    /* Brand / accent */
+    --accent: #8b99f9;
+    --accent-hover: #a3aefb;
+    --accent-contrast: #14161d;
+    --accent-soft: rgba(139, 153, 249, 0.16);
+
+    /* Semantic fills */
+    --success: #2fb56f;
+    --warning: #eab308;
+    --danger: #e35d6a;
+    --info: #38bdd3;
+
+    /* Semantic TEXT colours - safe against dark surfaces */
+    --success-text: #55d98f;
+    --warning-text: #f5c542;
+    --danger-text: #f59aa3;
+    --info-text: #67d5e8;
+}
+
+/* ============================================================
+   Global element re-skin (both themes go through variables)
+   ============================================================ */
+
+body {
+    background: var(--bg);
+    color: var(--text);
+}
+
+/* Theme toggle button (navbar + popout) */
+.theme-toggle {
+    background: var(--surface-3);
+    border: 1px solid var(--line);
+    color: var(--text);
+    border-radius: 7px;
+    width: 32px;
+    height: 32px;
+    font-size: 15px;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.theme-toggle:hover {
+    background: var(--line);
+}
+
+/* ============================================================
+   Dark-mode overrides for legacy hard-coded components
+   (style.css and per-page <style> blocks assume light colours)
+   ============================================================ */
+
+/* --- Navigation --- */
+[data-theme="dark"] .navbar {
+    background: var(--surface);
+    box-shadow: 0 2px 4px var(--shadow);
+    border-bottom: 1px solid var(--line);
+}
+[data-theme="dark"] .nav-brand {
+    color: var(--accent);
+}
+[data-theme="dark"] .nav-menu a {
+    color: var(--text-secondary);
+}
+[data-theme="dark"] .nav-menu a:hover {
+    color: var(--accent);
+}
+[data-theme="dark"] .dropdown-menu {
+    background: var(--surface-2);
+    box-shadow: 0 4px 12px var(--shadow-strong);
+    border: 1px solid var(--line);
+}
+[data-theme="dark"] .dropdown-menu a {
+    color: var(--text);
+}
+[data-theme="dark"] .dropdown-menu a:hover {
+    background: var(--surface-3);
+}
+
+/* --- Cards / containers --- */
+[data-theme="dark"] .dashboard-card,
+[data-theme="dark"] .table-container,
+[data-theme="dark"] .form-container,
+[data-theme="dark"] .modal-content,
+[data-theme="dark"] .settings-section,
+[data-theme="dark"] .quote-section,
+[data-theme="dark"] .foam-grade-section,
+[data-theme="dark"] .project-card,
+[data-theme="dark"] .kanban-column,
+[data-theme="dark"] .logo-upload-area,
+[data-theme="dark"] .totals-section {
+    background: var(--surface);
+    border-color: var(--line);
+    box-shadow: 0 2px 10px var(--shadow);
+    color: var(--text);
+}
+[data-theme="dark"] .card-description {
+    color: var(--text-muted);
+}
+[data-theme="dark"] .foam-grade-header {
+    background: var(--surface-2);
+    border-color: var(--line);
+}
+[data-theme="dark"] .foam-grade-section table thead th {
+    background: var(--surface);
+}
+
+/* --- Tables --- */
+[data-theme="dark"] th {
+    background: var(--surface-2);
+    color: var(--text-secondary);
+    border-bottom-color: var(--line);
+}
+[data-theme="dark"] td {
+    border-bottom-color: var(--line);
+}
+[data-theme="dark"] tr:hover {
+    background: var(--surface-2);
+}
+
+/* --- Forms --- */
+[data-theme="dark"] .form-control {
+    background: var(--surface-2);
+    border-color: var(--line);
+    color: var(--text);
+}
+[data-theme="dark"] .form-control:focus {
+    background: var(--surface-2);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 0.2rem var(--accent-soft);
+}
+[data-theme="dark"] .form-control::placeholder {
+    color: var(--text-muted);
+}
+[data-theme="dark"] .form-group label {
+    color: var(--text-secondary);
+}
+[data-theme="dark"] .form-text,
+[data-theme="dark"] .section-description,
+[data-theme="dark"] .text-muted {
+    color: var(--text-muted);
+}
+
+/* --- Page chrome --- */
+[data-theme="dark"] .page-header {
+    border-bottom-color: var(--line);
+}
+[data-theme="dark"] .page-title {
+    color: var(--text);
+}
+[data-theme="dark"] .footer {
+    background: var(--surface);
+    border-top-color: var(--line);
+}
+[data-theme="dark"] .footer-container {
+    color: var(--text-muted);
+}
+
+/* --- Buttons --- */
+[data-theme="dark"] .btn-primary {
+    background: var(--accent);
+    color: var(--accent-contrast);
+}
+[data-theme="dark"] .btn-primary:hover {
+    background: var(--accent-hover);
+}
+[data-theme="dark"] .btn-secondary {
+    background: var(--surface-3);
+    color: var(--text);
+    border: 1px solid var(--line);
+}
+[data-theme="dark"] .btn-secondary:hover {
+    background: var(--line);
+}
+[data-theme="dark"] .btn-outline {
+    background: transparent;
+    color: var(--accent);
+    border-color: var(--accent);
+}
+[data-theme="dark"] .btn-outline:hover {
+    background: var(--accent);
+    color: var(--accent-contrast);
+}
+
+/* --- Modals --- */
+[data-theme="dark"] .modal {
+    background-color: rgba(0, 0, 0, 0.65);
+}
+[data-theme="dark"] .modal-header,
+[data-theme="dark"] .modal-footer {
+    border-color: var(--line);
+}
+[data-theme="dark"] .modal-close {
+    color: var(--text-muted);
+}
+[data-theme="dark"] .modal-close:hover {
+    color: var(--text);
+}
+
+/* --- Alerts (tinted, readable on dark surfaces) --- */
+[data-theme="dark"] .alert-success {
+    background: rgba(52, 199, 123, 0.12);
+    color: var(--success-text);
+    border-color: rgba(52, 199, 123, 0.35);
+}
+[data-theme="dark"] .alert-danger {
+    background: rgba(227, 93, 106, 0.14);
+    color: var(--danger-text);
+    border-color: rgba(227, 93, 106, 0.4);
+}
+[data-theme="dark"] .alert-warning {
+    background: rgba(234, 179, 8, 0.12);
+    color: var(--warning-text);
+    border-color: rgba(234, 179, 8, 0.35);
+}
+[data-theme="dark"] .alert-info {
+    background: rgba(56, 189, 211, 0.12);
+    color: var(--info-text);
+    border-color: rgba(56, 189, 211, 0.35);
+}
+
+/* --- Tabs (materials page and friends) --- */
+[data-theme="dark"] .tab-navigation {
+    border-bottom-color: var(--line);
+}
+[data-theme="dark"] .tab-link {
+    color: var(--text-muted);
+}
+[data-theme="dark"] .tab-link:hover {
+    color: var(--accent);
+    background-color: var(--surface-2);
+}
+[data-theme="dark"] .tab-link.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+}
+
+/* --- Sort links / misc text --- */
+[data-theme="dark"] .sort-link:hover {
+    color: var(--accent);
+}
+
+/* Legacy inline muted text (style="color: #666") used across pages */
+[data-theme="dark"] [style*="color: #666"] {
+    color: var(--text-muted) !important;
+}
+[data-theme="dark"] [style*="color: #999"] {
+    color: var(--text-muted) !important;
+}

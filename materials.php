@@ -1020,12 +1020,12 @@ document.addEventListener('DOMContentLoaded', function() {
 /* Tab Navigation */
 .tab-navigation {
     display: flex;
-    border-bottom: 2px solid #dee2e6;
+    border-bottom: 2px solid var(--line);
     margin-bottom: 20px;
 }
 .tab-link {
     padding: 12px 24px;
-    color: #495057;
+    color: var(--text-secondary);
     text-decoration: none;
     border-bottom: 2px solid transparent;
     margin-bottom: -2px;
@@ -1033,12 +1033,12 @@ document.addEventListener('DOMContentLoaded', function() {
     transition: all 0.2s;
 }
 .tab-link:hover {
-    color: #007bff;
-    background-color: #f8f9fa;
+    color: var(--accent);
+    background-color: var(--surface-2);
 }
 .tab-link.active {
-    color: #007bff;
-    border-bottom-color: #007bff;
+    color: var(--accent);
+    border-bottom-color: var(--accent);
 }
 
 /* Tab Content */
@@ -1056,8 +1056,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 /* Foam Grade Sections */
 .foam-grade-section {
-    background: #fff;
-    border: 1px solid #dee2e6;
+    background: var(--surface);
+    border: 1px solid var(--line);
     border-radius: 8px;
     margin-bottom: 20px;
     overflow: hidden;
@@ -1067,8 +1067,8 @@ document.addEventListener('DOMContentLoaded', function() {
     justify-content: space-between;
     align-items: center;
     padding: 15px 20px;
-    background: #f8f9fa;
-    border-bottom: 1px solid #dee2e6;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--line);
 }
 .foam-grade-header h3 {
     margin: 0;
@@ -1079,7 +1079,7 @@ document.addEventListener('DOMContentLoaded', function() {
     border: none;
 }
 .foam-grade-section table thead th {
-    background: #fff;
+    background: var(--surface);
 }
 
 /* Filter Bar */
@@ -1088,21 +1088,22 @@ document.addEventListener('DOMContentLoaded', function() {
     align-items: center;
     gap: 10px;
     flex-wrap: wrap;
-    background: #fff;
-    border: 1px solid #dee2e6;
+    background: var(--surface);
+    border: 1px solid var(--line);
     border-radius: 8px;
     padding: 8px 12px;
 }
 .filter-bar .form-control {
     border: 1px solid transparent;
-    background: #f1f3f5;
+    background: var(--surface-3);
     border-radius: 6px;
     padding: 8px 10px;
     font-size: 14px;
+    color: var(--text);
 }
 .filter-bar .form-control:focus {
-    background: #fff;
-    border-color: #667eea;
+    background: var(--surface);
+    border-color: var(--accent);
     box-shadow: none;
 }
 .filter-search {
@@ -1126,7 +1127,7 @@ document.addEventListener('DOMContentLoaded', function() {
     min-width: 140px;
 }
 .filter-clear {
-    color: #6c757d;
+    color: var(--text-muted);
     font-size: 13px;
     text-decoration: none;
     padding: 6px 8px;
@@ -1134,19 +1135,19 @@ document.addEventListener('DOMContentLoaded', function() {
     white-space: nowrap;
 }
 .filter-clear:hover {
-    background: #f1f3f5;
-    color: #dc3545;
+    background: var(--surface-3);
+    color: var(--danger-text);
 }
 
 /* Outline button (Stock Window) */
 .btn-outline {
-    background: #fff;
-    color: #667eea;
-    border: 1px solid #667eea;
+    background: var(--surface);
+    color: var(--accent);
+    border: 1px solid var(--accent);
 }
 .btn-outline:hover {
-    background: #667eea;
-    color: #fff;
+    background: var(--accent);
+    color: var(--accent-contrast);
 }
 
 /* Row actions kebab menu */
@@ -1162,22 +1163,22 @@ document.addEventListener('DOMContentLoaded', function() {
     height: 32px;
     font-size: 18px;
     line-height: 1;
-    color: #495057;
+    color: var(--text-secondary);
     cursor: pointer;
     transition: background 0.15s;
 }
 .action-menu-btn:hover,
 .action-menu-btn.active {
-    background: #e9ecef;
+    background: var(--surface-3);
 }
 .action-menu {
     display: none;
     position: fixed;
     z-index: 3000;
-    background: #fff;
-    border: 1px solid #dee2e6;
+    background: var(--surface);
+    border: 1px solid var(--line);
     border-radius: 8px;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    box-shadow: 0 6px 20px var(--shadow-strong);
     min-width: 160px;
     padding: 6px;
 }
@@ -1194,19 +1195,19 @@ document.addEventListener('DOMContentLoaded', function() {
     background: none;
     border-radius: 6px;
     font-size: 14px;
-    color: #333;
+    color: var(--text);
     text-decoration: none;
     cursor: pointer;
     text-align: left;
 }
 .action-menu-item:hover {
-    background: #f1f3f5;
+    background: var(--surface-3);
 }
 .action-menu-danger {
-    color: #dc3545;
+    color: var(--danger-text);
 }
 .action-menu-danger:hover {
-    background: #fdecee;
+    background: rgba(220, 53, 69, 0.12);
 }
 .ami-icon {
     width: 18px;
@@ -1227,7 +1228,7 @@ document.addEventListener('DOMContentLoaded', function() {
     gap: 4px;
 }
 .sort-link:hover {
-    color: #007bff;
+    color: #0b5ed7;
 }
 thead th {
     cursor: pointer;
@@ -1245,7 +1246,7 @@ thead th {
     font-weight: 500;
 }
 .badge-success {
-    background-color: #28a745;
+    background-color: #218838;
     color: white;
 }
 .badge-secondary {
@@ -1257,7 +1258,7 @@ thead th {
     color: #212529;
 }
 .stock-low {
-    color: #dc3545;
+    color: var(--danger-text);
     font-weight: bold;
 }
 .form-row {
@@ -1268,11 +1269,11 @@ thead th {
     flex: 1;
 }
 .btn-info {
-    background-color: #17a2b8;
+    background-color: #128294;
     color: white;
 }
 .btn-info:hover {
-    background-color: #138496;
+    background-color: #0e6b7a;
 }
 </style>
 

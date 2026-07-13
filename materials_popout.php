@@ -15,6 +15,11 @@ $settingsModel = new Settings();
 
 $lowStockThreshold = (float)$settingsModel->get('materials_low_stock_threshold', '0');
 
+$currentTheme = $settingsModel->get('user_theme_' . Auth::getCurrentUserId(), 'light');
+if (!in_array($currentTheme, ['light', 'dark'], true)) {
+    $currentTheme = 'light';
+}
+
 $materials = array_map(function ($m) {
     return [
         'id' => (int)$m['id'],
@@ -66,25 +71,24 @@ if (($_GET['format'] ?? '') === 'json') {
 }
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="<?php echo $currentTheme; ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stock - WorkTrack</title>
     <link rel="icon" type="image/svg+xml" href="public/images/favicon.svg">
+    <link rel="stylesheet" href="public/css/theme.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root {
-            --bg: #14161d;
-            --panel: #1d2029;
-            --panel-2: #262a36;
-            --line: #2e3342;
-            --text: #e8eaf0;
-            --muted: #8b90a0;
-            --accent: #7c8cf8;
-            --ok: #34c77b;
-            --warn: #f0b429;
-            --bad: #f06363;
+        /* Local aliases onto the shared theme variables (theme.css) */
+        :root, [data-theme="dark"] {
+            --panel: var(--surface);
+            --panel-2: var(--surface-2);
+            --panel-3: var(--surface-3);
+            --muted: var(--text-muted);
+            --ok: var(--success-text);
+            --warn: var(--warning-text);
+            --bad: var(--danger-text);
         }
         html, body { height: 100%; }
         body {
@@ -133,7 +137,7 @@ if (($_GET['format'] ?? '') === 'json') {
             line-height: 1;
             transition: background 0.15s;
         }
-        .icon-btn:hover { background: #303546; }
+        .icon-btn:hover { background: var(--panel-3); }
         .icon-btn.spinning { animation: spin 0.7s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -170,7 +174,7 @@ if (($_GET['format'] ?? '') === 'json') {
             font-weight: 600;
             cursor: pointer;
         }
-        .chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+        .chip.active { background: var(--accent); border-color: var(--accent); color: var(--accent-contrast); }
 
         /* List */
         .list { flex: 1; overflow-y: auto; overscroll-behavior: contain; }
@@ -243,7 +247,7 @@ if (($_GET['format'] ?? '') === 'json') {
         .stock-editor .save {
             background: var(--accent);
             border: none;
-            color: #fff;
+            color: var(--accent-contrast);
             font-weight: 600;
             height: 30px;
             padding: 0 14px;
@@ -359,6 +363,7 @@ if (($_GET['format'] ?? '') === 'json') {
             <div class="brand"><span class="brand-dot"></span> Stock</div>
             <div class="top-meta">
                 <span id="updatedAt"></span>
+                <button type="button" class="icon-btn" id="themeToggle" title="Toggle light/dark mode"><?php echo $currentTheme === 'dark' ? '&#9728;' : '&#127769;'; ?></button>
                 <button type="button" class="icon-btn" id="refreshBtn" title="Refresh stock data">&#8635;</button>
             </div>
         </div>
@@ -703,6 +708,26 @@ document.addEventListener('keydown', e => {
         supplierPanel.classList.remove('open');
         updateFooterState();
     }
+});
+
+// Theme toggle, kept in sync with the main window via localStorage
+const themeToggle = document.getElementById('themeToggle');
+function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    themeToggle.innerHTML = theme === 'dark' ? '&#9728;' : '&#127769;';
+    try { localStorage.setItem('wt-theme', theme); } catch (e) {}
+}
+themeToggle.addEventListener('click', () => {
+    const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    applyTheme(next);
+    fetch('api/userTheme.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({theme: next})
+    });
+});
+window.addEventListener('storage', e => {
+    if (e.key === 'wt-theme' && (e.newValue === 'light' || e.newValue === 'dark')) applyTheme(e.newValue);
 });
 
 populateSuppliers();
